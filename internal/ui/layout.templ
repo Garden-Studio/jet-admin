@@ -1,0 +1,153 @@
+package ui
+
+// page is the document around every page: the header with the site and the
+// user, the breadcrumbs, the models' sidebar on wide screens and the flash
+// message of the last redirect.
+templ page(c Chrome) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="color-scheme" content="light dark"/>
+			<meta name="robots" content="noindex, nofollow"/>
+			<title>{ pageTitle(c) }</title>
+			<link rel="stylesheet" href={ c.StaticURL("admin.css") }/>
+			<script type="module" src={ c.StaticURL("datastar.js") }></script>
+		</head>
+		<body>
+			<a class="skip-link" href="#content">Skip to content</a>
+			<header class="topbar">
+				<a class="brand" href={ c.Base + "/" }>{ c.SiteTitle }</a>
+				if c.User != "" {
+					<div class="session">
+						<span class="session-user" aria-label="Signed in as">{ c.User }</span>
+						if c.LogoutURL != "" {
+							<form method="post" action={ c.LogoutURL }>
+								<button type="submit" class="link-button">Log out</button>
+							</form>
+						}
+					</div>
+				}
+			</header>
+			if len(c.Crumbs) > 0 {
+				<nav class="crumbs" aria-label="Breadcrumb">
+					<ol>
+						for i, crumb := range c.Crumbs {
+							<li>
+								if crumb.URL != "" {
+									<a href={ crumb.URL }>{ crumb.Label }</a>
+								} else {
+									<span aria-current={ ariaCurrent(i == len(c.Crumbs)-1) }>{ crumb.Label }</span>
+								}
+							</li>
+						}
+					</ol>
+				</nav>
+			}
+			<div class={ "shell", templ.KV("shell-bare", len(c.Nav) == 0) }>
+				if len(c.Nav) > 0 {
+					<aside class="sidebar">
+						<nav aria-label="Models">
+							for _, group := range c.Nav {
+								<section class="nav-group">
+									<h2>{ group.Name }</h2>
+									<ul>
+										for _, m := range group.Models {
+											<li class={ templ.KV("active", m.Slug == c.Active) }>
+												<a href={ m.URL } aria-current={ ariaCurrent(m.Slug == c.Active) }>{ m.Plural }</a>
+												if m.AddURL != "" {
+													<a class="nav-add" href={ m.AddURL } aria-label={ "Add " + m.Plural }>+</a>
+												}
+											</li>
+										}
+									</ul>
+								</section>
+							}
+						</nav>
+					</aside>
+				}
+				<main id="content" tabindex="-1">
+					@flash(c.Flash)
+					{ children... }
+				</main>
+			</div>
+			<div id="dialog"></div>
+		</body>
+	</html>
+}
+
+// flash is the message of the last redirect, patched on its own after a
+// Datastar request.
+templ flash(f *Flash) {
+	<div id="flash" aria-live="polite">
+		if f != nil {
+			<div class={ "message", templ.KV("message-error", f.Error), templ.KV("message-success", !f.Error) } role={ flashRole(f) }>
+				{ f.Text }
+			</div>
+		}
+	</div>
+}
+
+// Flash patches the message area alone.
+templ FlashFragment(f *Flash) {
+	@flash(f)
+}
+
+// cell draws one value.
+templ cell(c Cell) {
+	switch c.Kind {
+		case CellNull:
+			<span class="null" aria-label="empty">—</span>
+		case CellBool:
+			if c.Bool {
+				<span class="bool bool-yes" role="img" aria-label="yes">✓</span>
+			} else {
+				<span class="bool bool-no" role="img" aria-label="no">✗</span>
+			}
+		case CellMuted:
+			<span class="muted">{ c.Text }</span>
+		default:
+			if c.Href != "" {
+				<a href={ c.Href } class={ templ.KV("mono", c.Mono) } title={ c.Title }>{ c.Text }</a>
+			} else if c.Title != "" {
+				<span class={ templ.KV("mono", c.Mono) } title={ c.Title }>{ c.Text }</span>
+			} else {
+				<span class={ templ.KV("mono", c.Mono) }>{ c.Text }</span>
+			}
+	}
+	if c.Note != "" {
+		<span class="related-note">{ c.Note }</span>
+	}
+}
+
+templ pager(p Pager) {
+	if p.Pages > 1 {
+		<nav class="pager" aria-label="Pages">
+			if p.PrevURL != "" {
+				<a href={ p.PrevURL } rel="prev" data-on:click__prevent={ getHref() }>‹ Previous</a>
+			}
+			for _, link := range p.Links {
+				if link.Gap {
+					<span class="gap" aria-hidden="true">…</span>
+				} else if link.Current {
+					<span class="current" aria-current="page">{ link.Label }</span>
+				} else {
+					<a href={ link.URL } data-on:click__prevent={ getHref() }>{ link.Label }</a>
+				}
+			}
+			if p.NextURL != "" {
+				<a href={ p.NextURL } rel="next" data-on:click__prevent={ getHref() }>Next ›</a>
+			}
+		</nav>
+	}
+}
+
+// MessagePage is a page that only says something: not found, forbidden.
+templ Message(p MessagePage) {
+	@page(p.Chrome) {
+		<div class="page-head"><h1>{ p.Heading }</h1></div>
+		<p class="lead">{ p.Text }</p>
+		<p><a href={ p.Chrome.Base + "/" }>Back to the index</a></p>
+	}
+}

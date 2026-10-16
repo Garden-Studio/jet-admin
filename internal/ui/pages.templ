@@ -1,0 +1,503 @@
+package ui
+
+templ Index(p IndexPage) {
+	@page(p.Chrome) {
+		<div class="page-head"><h1>Site administration</h1></div>
+		<div class="index-grid">
+			<div class="index-models">
+				for _, group := range p.Groups {
+					<section class="card">
+						<h2 class="card-title">{ group.Name }</h2>
+						<table class="model-table">
+							<tbody>
+								for _, m := range group.Models {
+									<tr>
+										<th scope="row"><a href={ m.URL }>{ m.Plural }</a></th>
+										<td class="actions-cell">
+											if m.AddURL != "" {
+												<a class="add-link" href={ m.AddURL }>Add</a>
+											}
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</section>
+				}
+				if len(p.Groups) == 0 {
+					<p class="lead">No models are registered yet.</p>
+				}
+			</div>
+			if p.Audited {
+				<section class="card recent">
+					<h2 class="card-title">Recent actions</h2>
+					if len(p.Recent) == 0 {
+						<p class="empty">Nothing has been changed yet.</p>
+					} else {
+						<ul class="recent-list">
+							for _, e := range p.Recent {
+								<li class={ "log-" + e.ActionClass }>
+									<span class="log-action">{ e.Action }</span>
+									if e.ObjectURL != "" {
+										<a href={ e.ObjectURL }>{ e.Object }</a>
+									} else {
+										<span>{ e.Object }</span>
+									}
+									<small>{ e.Model } · { e.User } · <time>{ e.Time }</time></small>
+								</li>
+							}
+						</ul>
+						<p class="more"><a href={ p.LogURL }>All actions</a></p>
+					}
+				</section>
+			}
+		</div>
+	}
+}
+
+templ logTable(entries []LogEntry, withObject bool) {
+	<div class="table-wrap">
+		<table class="results">
+			<thead>
+				<tr>
+					<th scope="col">Time (UTC)</th>
+					<th scope="col">User</th>
+					<th scope="col">Action</th>
+					if withObject {
+						<th scope="col">Model</th>
+						<th scope="col">Object</th>
+					}
+					<th scope="col">Change</th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, e := range entries {
+					<tr>
+						<td class="mono nowrap">{ e.Time }</td>
+						<td>{ e.User }</td>
+						<td><span class={ "badge", "badge-" + e.ActionClass }>{ e.Action }</span></td>
+						if withObject {
+							<td>{ e.Model }</td>
+							<td>
+								if e.ObjectURL != "" {
+									<a href={ e.ObjectURL }>{ e.Object }</a>
+								} else {
+									{ e.Object }
+								}
+							</td>
+						}
+						<td>{ e.Message }</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+templ Log(p LogPage) {
+	@page(p.Chrome) {
+		<div class="page-head"><h1>Actions</h1></div>
+		if len(p.Entries) == 0 {
+			<p class="empty">{ p.Empty }</p>
+		} else {
+			@logTable(p.Entries, true)
+			@pager(p.Pager)
+		}
+	}
+}
+
+templ History(p HistoryPage) {
+	@page(p.Chrome) {
+		<div class="page-head"><h1>{ p.Heading }</h1></div>
+		if len(p.Entries) == 0 {
+			<p class="empty">{ p.Empty }</p>
+		} else {
+			@logTable(p.Entries, false)
+		}
+	}
+}
+
+templ List(p ListPage) {
+	@page(p.Chrome) {
+		<div class="page-head">
+			<h1>{ p.Plural }</h1>
+			if p.AddURL != "" {
+				<a class="button button-primary" href={ p.AddURL }>Add { p.Label }</a>
+			}
+		</div>
+		if p.Search != nil {
+			<form id="changelist-search" class="toolbar" method="get" action={ p.ListURL } role="search" data-on:submit__prevent={ getForm(p.ListURL) }>
+				<label class="sr-only" for="searchbar">Search { p.Plural }</label>
+				<input type="search" id="searchbar" name="q" value={ p.Search.Value } placeholder={ p.Search.Placeholder } autocomplete="off" spellcheck="false" data-on:input__debounce.300ms={ getForm(p.ListURL) }/>
+				<button type="submit" class="button">Search</button>
+				@listParams(p)
+			</form>
+		}
+		@listBody(p)
+	}
+}
+
+// ListFragment is what a Datastar search, filter, sort or page patches:
+// the filters the search form keeps, and the results with their sidebar.
+templ ListFragment(p ListPage) {
+	if p.Search != nil {
+		@listParams(p)
+	}
+	@listBody(p)
+}
+
+templ listParams(p ListPage) {
+	<span id="changelist-params" hidden>
+		for _, param := range p.Hidden {
+			<input type="hidden" name={ param.Name } value={ param.Value }/>
+		}
+	</span>
+}
+
+templ listBody(p ListPage) {
+	<div id="changelist" class={ "changelist", templ.KV("with-filters", len(p.Filters) > 0) }>
+		<div class="changelist-main">
+			<form id="bulk" method="post" action={ p.ListURL } data-on:submit__prevent={ postForm(p.ListURL) }>
+				<div class="list-actions">
+					if p.CanDelete && len(p.Rows) > 0 {
+						<button type="submit" name="action" value="delete" class="button button-danger-outline">Delete selected</button>
+					}
+					<span class="result-count" aria-live="polite">{ p.ResultLabel }</span>
+					if p.ClearURL != "" {
+						<a class="clear" href={ p.ClearURL } data-on:click__prevent={ getHref() }>Clear search and filters</a>
+					}
+				</div>
+				if len(p.Rows) == 0 {
+					<p class="empty">No { p.Plural } match.</p>
+				} else {
+					<div class="table-wrap">
+						<table class="results">
+							<caption class="sr-only">{ p.Plural }</caption>
+							<thead>
+								<tr>
+									if p.CanDelete {
+										<th scope="col" class="check">
+											<input type="checkbox" aria-label="Select all rows" data-on:change="document.querySelectorAll('#bulk input[name=pk]').forEach(c => c.checked = el.checked)"/>
+										</th>
+									}
+									for _, col := range p.Columns {
+										<th scope="col" class={ templ.KV("num", col.Numeric) } aria-sort={ ariaSort(col.Sorted) }>
+											if col.SortURL != "" {
+												<a href={ col.SortURL } data-on:click__prevent={ getHref() }>
+													{ col.Label }
+													<span class="sort-mark" aria-hidden="true">{ sortMark(col.Sorted) }</span>
+												</a>
+											} else {
+												{ col.Label }
+											}
+										</th>
+									}
+								</tr>
+							</thead>
+							<tbody>
+								for _, row := range p.Rows {
+									<tr>
+										if p.CanDelete {
+											<td class="check"><input type="checkbox" name="pk" value={ row.PK } aria-label={ "Select " + row.Label }/></td>
+										}
+										for i, c := range row.Cells {
+											if i == 0 {
+												<th scope="row" class={ templ.KV("num", c.Numeric) }><a href={ row.URL }>@cell(withoutHref(c))</a></th>
+											} else {
+												<td class={ templ.KV("num", c.Numeric) }>@cell(c)</td>
+											}
+										}
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			</form>
+			@pager(p.Pager)
+		</div>
+		if len(p.Filters) > 0 {
+			<aside class="filters" aria-labelledby="filters-title">
+				<h2 id="filters-title">Filter</h2>
+				for _, f := range p.Filters {
+					<section class="filter">
+						<h3>By { f.Label }</h3>
+						if f.Note != "" {
+							<p class="muted small">{ f.Note }</p>
+						}
+						<ul>
+							for _, o := range f.Options {
+								<li class={ templ.KV("selected", o.Active) }>
+									<a href={ o.URL } aria-current={ ariaCurrent(o.Active) } data-on:click__prevent={ getHref() }>{ o.Label }</a>
+								</li>
+							}
+						</ul>
+					</section>
+				}
+			</aside>
+		}
+	</div>
+}
+
+templ Form(p FormPage) {
+	@page(p.Chrome) {
+		<div class="page-head">
+			<h1>{ p.Heading }</h1>
+			if p.HistoryURL != "" {
+				<a class="button" href={ p.HistoryURL }>History</a>
+			}
+		</div>
+		@FormFragment(p)
+		for _, in := range p.Inlines {
+			@inlineList(in)
+		}
+	}
+}
+
+// FormFragment is the form alone, which a Datastar save patches with its
+// errors. The id is on a wrapper: an input named after a column called id
+// would shadow the form's own id property, and the patch would find no
+// target.
+templ FormFragment(p FormPage) {
+	<div id="change-form">
+		@changeForm(p)
+	</div>
+}
+
+templ changeForm(p FormPage) {
+	<form class="change-form" method="post" action={ p.Action } novalidate data-on:submit__prevent={ postForm(p.Action) } data-indicator:saving>
+		if p.FormError != "" {
+			<div class="message message-error" role="alert">{ p.FormError }</div>
+		} else if hasErrors(p.Fields) {
+			<div class="message message-error" role="alert">Please correct the errors below.</div>
+		}
+		<div class="card fields">
+			for _, f := range p.Fields {
+				@formRow(f)
+			}
+		</div>
+		<div class="submit-row">
+			if p.CanSave {
+				<button type="submit" class="button button-primary" name="_save" value="1" data-attr:disabled="$saving">{ p.SaveLabel }</button>
+				<button type="submit" class="button" name="_continue" value="1" data-attr:disabled="$saving">Save and continue editing</button>
+				<button type="submit" class="button" name="_addanother" value="1" data-attr:disabled="$saving">Save and add another</button>
+			}
+			if p.DeleteURL != "" {
+				<a class="button button-danger-outline push-right" href={ p.DeleteURL } data-on:click__prevent={ getHref() }>Delete</a>
+			}
+		</div>
+	</form>
+}
+
+templ formRow(f FormField) {
+	<div class={ "form-row", templ.KV("has-error", f.Error != ""), templ.KV("is-checkbox", f.Input == InputCheckbox) }>
+		if f.Input == InputReadOnly {
+			<span class="label" id={ fieldID(f.Name) + "-label" }>{ f.Label }</span>
+			<div class="control readonly" aria-labelledby={ fieldID(f.Name) + "-label" }>
+				@cell(f.Cell)
+				if f.Help != "" || f.Note != "" {
+					<p class="help" id={ fieldID(f.Name) + "-help" }>{ joinHelp(f) }</p>
+				}
+			</div>
+		} else if f.Input == InputCheckbox {
+			<span class="label" aria-hidden="true"></span>
+			<div class="control">
+				<label class="check-label" for={ fieldID(f.Name) }>
+					<input type="checkbox" id={ fieldID(f.Name) } name={ f.Name } value="true" checked?={ f.Checked } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+					{ f.Label }
+				</label>
+				@fieldNotes(f)
+			</div>
+		} else {
+			<label class="label" for={ fieldID(f.Name) }>
+				{ f.Label }
+				if f.Required {
+					<span class="required" aria-hidden="true">*</span>
+				}
+			</label>
+			<div class="control">
+				@input(f)
+				if f.Related != nil {
+					<p class="related">@cell(*f.Related)</p>
+				}
+				@fieldNotes(f)
+			</div>
+		}
+	</div>
+}
+
+templ fieldNotes(f FormField) {
+	if f.Help != "" || f.Note != "" {
+		<p class="help" id={ fieldID(f.Name) + "-help" }>{ joinHelp(f) }</p>
+	}
+	if f.Error != "" {
+		<p class="error" id={ fieldID(f.Name) + "-error" }>{ f.Error }</p>
+	}
+}
+
+templ input(f FormField) {
+	switch f.Input {
+		case InputTextarea:
+			<textarea id={ fieldID(f.Name) } name={ f.Name } rows={ textareaRows(f.Value) } class={ templ.KV("mono", f.Mono) } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) } spellcheck={ spellcheck(f) }>{ f.Value }</textarea>
+		case InputNumber:
+			<input type="number" step="1" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } inputmode="numeric" required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+		case InputDecimal:
+			<input type="number" step="any" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } inputmode="decimal" required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+		case InputDateTime:
+			<input type="datetime-local" step="1" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+		case InputDate:
+			<input type="date" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+		case InputPassword:
+			<input type="password" id={ fieldID(f.Name) } name={ f.Name } autocomplete="new-password" required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+		case InputSelect, InputNullBool:
+			<select id={ fieldID(f.Name) } name={ f.Name } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }>
+				for _, o := range f.Options {
+					<option value={ o.Value } selected?={ o.Selected }>{ o.Label }</option>
+				}
+			</select>
+		default:
+			<input type="text" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } class={ templ.KV("mono", f.Mono) } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) } spellcheck={ spellcheck(f) }/>
+	}
+}
+
+templ inlineList(in InlineList) {
+	<section class="card inline" aria-labelledby={ "inline-" + slugID(in.Plural) }>
+		<div class="inline-head">
+			<h2 class="card-title" id={ "inline-" + slugID(in.Plural) }>{ in.Plural } <span class="count">{ i64toa(in.Total) }</span></h2>
+			<div class="inline-links">
+				if in.AllURL != "" && in.Total > int64(len(in.Rows)) {
+					<a href={ in.AllURL }>View all</a>
+				}
+				if in.AddURL != "" {
+					<a class="button button-small" href={ in.AddURL }>Add another</a>
+				}
+			</div>
+		</div>
+		if len(in.Rows) == 0 {
+			<p class="empty">None yet.</p>
+		} else {
+			<div class="table-wrap">
+				<table class="results">
+					<thead>
+						<tr>
+							for _, c := range in.Columns {
+								<th scope="col">{ c }</th>
+							}
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range in.Rows {
+							<tr>
+								for i, c := range row.Cells {
+									if i == 0 {
+										<th scope="row"><a href={ row.URL }>@cell(withoutHref(c))</a></th>
+									} else {
+										<td class={ templ.KV("num", c.Numeric) }>@cell(c)</td>
+									}
+								}
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</section>
+}
+
+templ Delete(p DeletePage) {
+	@page(p.Chrome) {
+		<div class="page-head"><h1>{ p.Heading }</h1></div>
+		<div class="card confirm">
+			@deleteBody(p)
+		</div>
+	}
+}
+
+// DeleteDialog is the same confirmation as a dialog over the page.
+templ DeleteDialog(p DeletePage) {
+	<div id="dialog">
+		<div class="modal" data-on:keydown__window={ "evt.key === 'Escape' && " + closeDialog }>
+			<div class="modal-backdrop" data-on:click={ closeDialog }></div>
+			<div class="modal-card card" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-body">
+				<h2 id="dialog-title">{ p.Heading }</h2>
+				<div id="dialog-body">
+					@deleteBody(p)
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ deleteBody(p DeletePage) {
+	if p.Bulk {
+		<p>These { plural(int64(len(p.Objects)), p.Label, p.Plural) } will be deleted:</p>
+	} else {
+		<p>This { p.Label } will be deleted:</p>
+	}
+	<ul class="delete-list">
+		for _, o := range p.Objects {
+			<li><a href={ o.URL }>{ o.Label }</a></li>
+		}
+	</ul>
+	<p class="muted">This cannot be undone.</p>
+	<form method="post" action={ p.Action } data-on:submit__prevent={ postForm(p.Action) } data-indicator:deleting>
+		for _, key := range p.Keys {
+			<input type="hidden" name="pk" value={ key }/>
+		}
+		if p.Bulk {
+			<input type="hidden" name="action" value="delete"/>
+		}
+		<input type="hidden" name="confirm" value="yes"/>
+		<div class="submit-row">
+			<button type="submit" class="button button-danger" data-init="el.focus()" data-attr:disabled="$deleting">Yes, delete</button>
+			if p.Dialog {
+				<button type="button" class="button" data-on:click={ closeDialog }>No, keep it</button>
+			} else {
+				<a class="button" href={ p.CancelURL }>No, keep it</a>
+			}
+		</div>
+	</form>
+}
+
+templ Login(p LoginPage) {
+	@page(p.Chrome) {
+		<div class="login">
+			<form class="card login-card" method="post" action={ p.Action } data-on:submit__prevent={ postForm(p.Action) } data-indicator:signing>
+				<h1>{ p.Chrome.SiteTitle }</h1>
+				@LoginError(p.Error)
+				<input type="hidden" name="next" value={ p.Next }/>
+				<div class="form-row stacked">
+					<label class="label" for="login-username">Username</label>
+					<input type="text" id="login-username" name="username" value={ p.Username } autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus/>
+				</div>
+				<div class="form-row stacked">
+					<label class="label" for="login-password">Password</label>
+					<input type="password" id="login-password" name="password" autocomplete="current-password" required/>
+				</div>
+				<button type="submit" class="button button-primary button-block" data-attr:disabled="$signing">Log in</button>
+			</form>
+		</div>
+	}
+}
+
+// LoginError is the login form's message, patched alone after a failed
+// Datastar sign-in.
+templ LoginError(text string) {
+	<div id="login-error" aria-live="assertive">
+		if text != "" {
+			<div class="message message-error" role="alert">{ text }</div>
+		}
+	</div>
+}
+
+templ Logout(p LoginPage) {
+	@page(p.Chrome) {
+		<div class="login">
+			<form class="card login-card" method="post" action={ p.Action }>
+				<h1>Log out</h1>
+				<p>Log out of { p.Chrome.SiteTitle }?</p>
+				<button type="submit" class="button button-primary button-block">Log out</button>
+			</form>
+		</div>
+	}
+}
