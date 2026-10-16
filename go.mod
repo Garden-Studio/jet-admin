@@ -3,6 +3,7 @@ module github.com/garden-studio/jet-admin
 go 1.26.3
 
 require (
+	github.com/Oudwins/tailwind-merge-go v0.2.3
 	github.com/a-h/templ v0.3.1070
 	github.com/go-jet/jet/v2 v2.16.1
 	github.com/google/uuid v1.6.0
@@ -13,6 +14,7 @@ require (
 
 require (
 	github.com/CAFxX/httpcompression v0.0.9 // indirect
+	github.com/Garden-Studio/gowind/v4 v4.3.3 // indirect
 	github.com/andybalholm/brotli v1.2.6 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
@@ -23,3 +25,5 @@ require (
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 )
+
+tool github.com/Garden-Studio/gowind/v4
