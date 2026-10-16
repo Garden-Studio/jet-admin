@@ -37,8 +37,9 @@ type LoginProvider interface {
 // an Authenticator) needs to look like the rest of the admin. The Site puts
 // it in the request's context.
 type Chrome struct {
-	Title    string
-	BasePath string
+	Title       string
+	BasePath    string
+	Stylesheets []string // the host's, after the admin's own
 }
 
 type chromeKey struct{}

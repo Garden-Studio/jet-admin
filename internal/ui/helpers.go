@@ -3,6 +3,11 @@ package ui
 import (
 	"encoding/json"
 	"strconv"
+
+	"github.com/a-h/templ"
+
+	"github.com/garden-studio/jet-admin/internal/ui/components/alert"
+	"github.com/garden-studio/jet-admin/internal/ui/components/badge"
 )
 
 func pageTitle(c Chrome) string {
@@ -41,13 +46,6 @@ func getForm(url string) string { return "@get(" + js(url) + ", {contentType: 'f
 // postForm sends the closest form with Datastar as a POST.
 func postForm(url string) string { return "@post(" + js(url) + ", {contentType: 'form'})" }
 
-// getURL asks the server for url with Datastar.
-func getURL(url string) string { return "@get(" + js(url) + ")" }
-
-// closeDialog empties the dialog slot.
-const closeDialog = "document.getElementById('dialog').replaceChildren()"
-
-func itoa(n int) string { return strconv.Itoa(n) }
 
 func i64toa(n int64) string { return strconv.FormatInt(n, 10) }
 
@@ -82,16 +80,6 @@ func ariaSort(sorted string) string {
 		return "descending"
 	}
 	return "none"
-}
-
-func sortMark(sorted string) string {
-	switch sorted {
-	case "asc":
-		return "▲"
-	case "desc":
-		return "▼"
-	}
-	return ""
 }
 
 func withoutHref(c Cell) Cell {
@@ -132,14 +120,14 @@ func joinHelp(f FormField) string {
 	return f.Note
 }
 
-func textareaRows(value string) string {
+func textareaRowsN(value string) int {
 	rows := 3
 	for _, r := range value {
 		if r == '\n' {
 			rows++
 		}
 	}
-	return strconv.Itoa(min(max(rows, 4), 20))
+	return min(max(rows, 4), 20)
 }
 
 func slugID(s string) string {
@@ -155,4 +143,106 @@ func slugID(s string) string {
 		}
 	}
 	return string(out)
+}
+
+// crumbNarrow hides the middle crumbs, and the separators before them, on
+// narrow screens: Home and the page itself stay.
+func crumbNarrow(i, n int) string {
+	if i > 0 && i < n-1 {
+		return "max-sm:hidden"
+	}
+	return ""
+}
+
+func ariaCurrentAttr(current bool) templ.Attributes {
+	if current {
+		return templ.Attributes{"aria-current": "page"}
+	}
+	return nil
+}
+
+func flashVariant(f *Flash) alert.Variant {
+	if f.Error {
+		return alert.VariantDestructive
+	}
+	return alert.VariantDefault
+}
+
+func emptyFrame(framed bool) string {
+	if framed {
+		return "border py-10"
+	}
+	return ""
+}
+
+func emptyListText(p ListPage) string {
+	if p.ClearURL != "" {
+		return "Nothing matches the search and filters."
+	}
+	return ""
+}
+
+// actionVariant is the badge of an audit log action.
+func actionVariant(action string) badge.Variant {
+	switch action {
+	case "add":
+		return badge.VariantSecondary
+	case "delete":
+		return badge.VariantDestructive
+	}
+	return badge.VariantOutline
+}
+
+// pageLinkAttrs makes a page link follow itself with Datastar.
+func pageLinkAttrs(url, rel string) templ.Attributes {
+	if url == "" {
+		return nil
+	}
+	a := templ.Attributes{"data-on:click__prevent": getHref()}
+	if rel != "" {
+		a["rel"] = rel
+	}
+	return a
+}
+
+func cellClass(c Cell) string {
+	if c.Numeric {
+		return "text-right tabular-nums"
+	}
+	return ""
+}
+
+func monoClass(mono bool) string {
+	if mono {
+		return "font-mono"
+	}
+	return ""
+}
+
+func invalidAttr(f FormField) templ.Attributes {
+	if f.Error != "" {
+		return templ.Attributes{"data-invalid": "true"}
+	}
+	return nil
+}
+
+// inputAttrs are the ARIA attributes every input of a field carries.
+func inputAttrs(f FormField) templ.Attributes {
+	a := templ.Attributes{"aria-invalid": invalid(f)}
+	if d := describedBy(f); d != "" {
+		a["aria-describedby"] = d
+	}
+	return a
+}
+
+// withAttrs is a with b's attributes added.
+func withAttrs(a, b templ.Attributes) templ.Attributes {
+	out := templ.Attributes{}
+	for k, v := range a {
+		out[k] = v
+	}
+	for k, v := range b {
+		out[k] = v
+	}
+	return out
 }

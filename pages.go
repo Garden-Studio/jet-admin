@@ -12,6 +12,7 @@ func (s *Site) chrome(w http.ResponseWriter, r *http.Request, u User, title, act
 	c := ui.Chrome{
 		SiteTitle: s.title,
 		Base:      s.base,
+		Styles:    s.styles,
 		PageTitle: title,
 		User:      u.Username,
 		Nav:       s.nav(),

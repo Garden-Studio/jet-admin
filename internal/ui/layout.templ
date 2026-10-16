@@ -1,8 +1,24 @@
 package ui
 
-// page is the document around every page: the header with the site and the
-// user, the breadcrumbs, the models' sidebar on wide screens and the flash
-// message of the last redirect.
+import (
+	"github.com/garden-studio/jet-admin/internal/ui/components"
+	"github.com/garden-studio/jet-admin/internal/ui/components/alert"
+	"github.com/garden-studio/jet-admin/internal/ui/components/breadcrumb"
+	"github.com/garden-studio/jet-admin/internal/ui/components/button"
+	"github.com/garden-studio/jet-admin/internal/ui/components/icon"
+	"github.com/garden-studio/jet-admin/internal/ui/components/separator"
+	"github.com/garden-studio/jet-admin/internal/ui/components/sidebar"
+)
+
+// page is the document around every page: the models' sidebar, the header
+// with the breadcrumbs and the session, and the flash message of the last
+// redirect.
+//
+// Who drives what: shadcn-templ's script owns the sidebar (the sheet it
+// becomes on narrow screens) and the delete dialog's opening, closing and
+// focus; Datastar owns every round trip, and only ever patches #flash,
+// #changelist, #changelist-params, #change-form, #login-error and #dialog,
+// none of which holds an element the component script keeps state on.
 templ page(c Chrome) {
 	<!DOCTYPE html>
 	<html lang="en">
@@ -13,78 +29,146 @@ templ page(c Chrome) {
 			<meta name="robots" content="noindex, nofollow"/>
 			<title>{ pageTitle(c) }</title>
 			<link rel="stylesheet" href={ c.StaticURL("admin.css") }/>
-			<script type="module" src={ c.StaticURL("datastar.js") }></script>
-		</head>
-		<body>
-			<a class="skip-link" href="#content">Skip to content</a>
-			<header class="topbar">
-				<a class="brand" href={ c.Base + "/" }>{ c.SiteTitle }</a>
-				if c.User != "" {
-					<div class="session">
-						<span class="session-user" aria-label="Signed in as">{ c.User }</span>
-						if c.LogoutURL != "" {
-							<form method="post" action={ c.LogoutURL }>
-								<button type="submit" class="link-button">Log out</button>
-							</form>
-						}
-					</div>
-				}
-			</header>
-			if len(c.Crumbs) > 0 {
-				<nav class="crumbs" aria-label="Breadcrumb">
-					<ol>
-						for i, crumb := range c.Crumbs {
-							<li>
-								if crumb.URL != "" {
-									<a href={ crumb.URL }>{ crumb.Label }</a>
-								} else {
-									<span aria-current={ ariaCurrent(i == len(c.Crumbs)-1) }>{ crumb.Label }</span>
-								}
-							</li>
-						}
-					</ol>
-				</nav>
+			for _, href := range c.Styles {
+				<link rel="stylesheet" href={ href }/>
 			}
-			<div class={ "shell", templ.KV("shell-bare", len(c.Nav) == 0) }>
-				if len(c.Nav) > 0 {
-					<aside class="sidebar">
-						<nav aria-label="Models">
-							for _, group := range c.Nav {
-								<section class="nav-group">
-									<h2>{ group.Name }</h2>
-									<ul>
-										for _, m := range group.Models {
-											<li class={ templ.KV("active", m.Slug == c.Active) }>
-												<a href={ m.URL } aria-current={ ariaCurrent(m.Slug == c.Active) }>{ m.Plural }</a>
-												if m.AddURL != "" {
-													<a class="nav-add" href={ m.AddURL } aria-label={ "Add " + m.Plural }>+</a>
-												}
-											</li>
-										}
-									</ul>
-								</section>
-							}
-						</nav>
-					</aside>
+			<script type="module" nonce={ templ.GetNonce(ctx) } src={ c.StaticURL("datastar.js") }></script>
+			@components.Scripts(c.Base)
+		</head>
+		<body class="min-h-svh bg-background text-xs/relaxed text-foreground antialiased">
+			<a class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:ring-2 focus:ring-ring" href="#content">Skip to content</a>
+			if len(c.Nav) > 0 {
+				@sidebar.Provider(sidebar.ProviderProps{ID: "admin-sidebar"}) {
+					@navSidebar(c)
+					@sidebar.Inset(sidebar.InsetProps{Class: "min-w-0"}) {
+						@topbar(c)
+						@content(c) {
+							{ children... }
+						}
+					}
 				}
-				<main id="content" tabindex="-1">
-					@flash(c.Flash)
+			} else {
+				@topbar(c)
+				@content(c) {
 					{ children... }
-				</main>
-			</div>
+				}
+			}
 			<div id="dialog"></div>
 		</body>
 	</html>
 }
 
+templ content(c Chrome) {
+	<main id="content" tabindex="-1" class="mx-auto flex w-full max-w-screen-2xl flex-1 flex-col gap-4 p-4 outline-none md:p-6">
+		@flash(c.Flash)
+		{ children... }
+	</main>
+}
+
+// navSidebar lists the models by group. Below md it is a sheet the trigger
+// in the header opens, which takes JavaScript; without it the header's site
+// title leads to the index, which lists the same models.
+templ navSidebar(c Chrome) {
+	@sidebar.Sidebar(sidebar.Props{Attributes: templ.Attributes{"aria-label": "Models"}}) {
+		@sidebar.Header() {
+			<a href={ c.Base + "/" } class="flex h-8 items-center gap-2 rounded-md px-2 text-sm font-semibold tracking-tight outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring">
+				@icon.Database(icon.Props{Class: "size-4", Attributes: templ.Attributes{"aria-hidden": "true"}})
+				<span class="truncate">{ c.SiteTitle }</span>
+			</a>
+		}
+		@sidebar.Content() {
+			<nav aria-label="Models">
+				for _, group := range c.Nav {
+					@sidebar.Group() {
+						@sidebar.GroupLabel() {
+							{ group.Name }
+						}
+						@sidebar.GroupContent() {
+							@sidebar.Menu() {
+								for _, m := range group.Models {
+									@sidebar.MenuItem() {
+										@sidebar.MenuButton(sidebar.MenuButtonProps{Href: m.URL, IsActive: m.Slug == c.Active, Attributes: ariaCurrentAttr(m.Slug == c.Active)}) {
+											<span>{ m.Plural }</span>
+										}
+										if m.AddURL != "" {
+											@sidebar.MenuAction(sidebar.MenuActionProps{Href: m.AddURL, ShowOnHover: m.Slug != c.Active, Attributes: templ.Attributes{"aria-label": "Add " + m.Plural, "title": "Add " + m.Plural}}) {
+												@icon.Plus(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true"}})
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			</nav>
+		}
+	}
+}
+
+// topbar is the header: the sidebar's trigger on narrow screens, the
+// breadcrumbs and who is signed in.
+templ topbar(c Chrome) {
+	<header class="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/80 md:px-6">
+		if len(c.Nav) > 0 {
+			@sidebar.Trigger(sidebar.TriggerProps{Class: "-ml-1 md:hidden noscript:hidden"})
+			@separator.Separator(separator.Props{Orientation: separator.OrientationVertical, Class: "mr-1 data-vertical:h-4 data-vertical:self-center md:hidden noscript:hidden"})
+		}
+		if len(c.Crumbs) == 0 {
+			<a href={ c.Base + "/" } class={ "text-sm font-semibold tracking-tight", templ.KV("md:hidden", len(c.Nav) > 0) }>{ c.SiteTitle }</a>
+		} else {
+			@breadcrumb.Breadcrumb(breadcrumb.Props{Class: "min-w-0"}) {
+				@breadcrumb.List(breadcrumb.ListProps{Class: "flex-nowrap"}) {
+					for i, crumb := range c.Crumbs {
+						if i > 0 {
+							@breadcrumb.Separator(breadcrumb.SeparatorProps{Class: crumbNarrow(i, len(c.Crumbs))})
+						}
+						@breadcrumb.Item(breadcrumb.ItemProps{Class: "min-w-0 " + crumbNarrow(i, len(c.Crumbs))}) {
+							if crumb.URL != "" {
+								@breadcrumb.Link(breadcrumb.LinkProps{Href: crumb.URL, Class: "truncate"}) {
+									{ crumb.Label }
+								}
+							} else {
+								@breadcrumb.Page(breadcrumb.ItemProps{Class: "truncate"}) {
+									{ crumb.Label }
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if c.User != "" {
+			<div class="ml-auto flex shrink-0 items-center gap-1">
+				<span class="hidden text-muted-foreground sm:inline"><span class="sr-only">Signed in as </span>{ c.User }</span>
+				if c.LogoutURL != "" {
+					<form method="post" action={ c.LogoutURL } class="m-0">
+						@button.Button(button.Props{Type: button.TypeSubmit, Variant: button.VariantGhost, Size: button.SizeSm}) {
+							@icon.LogOut(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true", "data-icon": "inline-start"}})
+							Log out
+						}
+					</form>
+				}
+			</div>
+		}
+	</header>
+}
+
 // flash is the message of the last redirect, patched on its own after a
 // Datastar request.
 templ flash(f *Flash) {
-	<div id="flash" aria-live="polite">
+	<div id="flash" aria-live="polite" class="empty:hidden">
 		if f != nil {
-			<div class={ "message", templ.KV("message-error", f.Error), templ.KV("message-success", !f.Error) } role={ flashRole(f) }>
-				{ f.Text }
-			</div>
+			@alert.Alert(alert.Props{Variant: flashVariant(f), Attributes: templ.Attributes{"role": flashRole(f)}}) {
+				if f.Error {
+					@icon.CircleAlert(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true"}})
+				} else {
+					@icon.CircleCheck(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true"}})
+				}
+				@alert.Description() {
+					{ f.Text }
+				}
+			}
 		}
 	</div>
 }
@@ -98,56 +182,36 @@ templ FlashFragment(f *Flash) {
 templ cell(c Cell) {
 	switch c.Kind {
 		case CellNull:
-			<span class="null" aria-label="empty">—</span>
+			<span class="text-muted-foreground" aria-label="empty">—</span>
 		case CellBool:
 			if c.Bool {
-				<span class="bool bool-yes" role="img" aria-label="yes">✓</span>
+				@icon.Check(icon.Props{Class: "size-4 text-foreground", Attributes: templ.Attributes{"role": "img", "aria-label": "yes"}})
 			} else {
-				<span class="bool bool-no" role="img" aria-label="no">✗</span>
+				@icon.X(icon.Props{Class: "size-4 text-muted-foreground", Attributes: templ.Attributes{"role": "img", "aria-label": "no"}})
 			}
 		case CellMuted:
-			<span class="muted">{ c.Text }</span>
+			<span class="text-muted-foreground">{ c.Text }</span>
 		default:
 			if c.Href != "" {
-				<a href={ c.Href } class={ templ.KV("mono", c.Mono) } title={ c.Title }>{ c.Text }</a>
+				<a href={ c.Href } class={ "font-medium underline-offset-4 hover:underline", templ.KV("font-mono", c.Mono) } title={ c.Title }>{ c.Text }</a>
 			} else if c.Title != "" {
-				<span class={ templ.KV("mono", c.Mono) } title={ c.Title }>{ c.Text }</span>
+				<span class={ templ.KV("font-mono", c.Mono) } title={ c.Title }>{ c.Text }</span>
 			} else {
-				<span class={ templ.KV("mono", c.Mono) }>{ c.Text }</span>
+				<span class={ templ.KV("font-mono", c.Mono) }>{ c.Text }</span>
 			}
 	}
 	if c.Note != "" {
-		<span class="related-note">{ c.Note }</span>
-	}
-}
-
-templ pager(p Pager) {
-	if p.Pages > 1 {
-		<nav class="pager" aria-label="Pages">
-			if p.PrevURL != "" {
-				<a href={ p.PrevURL } rel="prev" data-on:click__prevent={ getHref() }>‹ Previous</a>
-			}
-			for _, link := range p.Links {
-				if link.Gap {
-					<span class="gap" aria-hidden="true">…</span>
-				} else if link.Current {
-					<span class="current" aria-current="page">{ link.Label }</span>
-				} else {
-					<a href={ link.URL } data-on:click__prevent={ getHref() }>{ link.Label }</a>
-				}
-			}
-			if p.NextURL != "" {
-				<a href={ p.NextURL } rel="next" data-on:click__prevent={ getHref() }>Next ›</a>
-			}
-		</nav>
+		<span class="ml-1.5 text-muted-foreground">{ c.Note }</span>
 	}
 }
 
 // MessagePage is a page that only says something: not found, forbidden.
 templ Message(p MessagePage) {
 	@page(p.Chrome) {
-		<div class="page-head"><h1>{ p.Heading }</h1></div>
-		<p class="lead">{ p.Text }</p>
-		<p><a href={ p.Chrome.Base + "/" }>Back to the index</a></p>
+		@emptyState(p.Heading, p.Text, true) {
+			@button.Button(button.Props{Href: p.Chrome.Base + "/", Variant: button.VariantOutline}) {
+				Back to the index
+			}
+		}
 	}
 }

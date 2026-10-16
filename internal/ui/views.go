@@ -10,7 +10,8 @@ import (
 //go:embed static
 var static embed.FS
 
-// Static is the stylesheet and datastar.js, served under BasePath/static/.
+// Static is the stylesheet, datastar.js and the components' script, served
+// under BasePath/static/.
 func Static() fs.FS {
 	sub, _ := fs.Sub(static, "static")
 	return sub
@@ -19,7 +20,8 @@ func Static() fs.FS {
 // Chrome is what every page around its content shows.
 type Chrome struct {
 	SiteTitle string
-	Base      string // BasePath, without the trailing slash
+	Base      string   // BasePath, without the trailing slash
+	Styles    []string // the host's stylesheets, linked after admin.css
 	PageTitle string
 	User      string // username, "" on the login page
 	LogoutURL string // "" when the Authenticator serves no logout
@@ -224,7 +226,6 @@ type DeletePage struct {
 	CancelURL string
 	Keys      []string // the primary keys a bulk delete posts back
 	Bulk      bool
-	Dialog    bool // shown over the page by Datastar, not as a page
 	Label     string
 	Plural    string
 }

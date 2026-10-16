@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/starfederation/datastar-go/datastar"
 
 	"github.com/garden-studio/jet-admin/internal/ui"
 )
@@ -37,8 +38,12 @@ func (s *Site) deleteConfirm(w http.ResponseWriter, r *http.Request, u User, p *
 
 func (s *Site) renderDelete(w http.ResponseWriter, r *http.Request, u User, p *modelPage, page ui.DeletePage, crumbs ...ui.Crumb) {
 	if fromDatastar(r) {
-		page.Dialog = true
-		s.patch(w, r, ui.DeleteDialog(page))
+		// Replaced, not morphed: a morph would keep the old dialog's portal
+		// placeholder (it has no id), and with it the old dialog the
+		// component script moved to <body>.
+		if err := datastar.NewSSE(w, r).PatchElementTempl(ui.DeleteDialog(page), datastar.WithModeReplace()); err != nil {
+			s.logFailure(r, "patch delete dialog", err)
+		}
 		return
 	}
 	crumbs = append([]ui.Crumb{{Label: p.plural, URL: p.listURL()}}, crumbs...)

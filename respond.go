@@ -130,8 +130,9 @@ func (s *Site) takeFlash(w http.ResponseWriter, r *http.Request) *ui.Flash {
 	return &ui.Flash{Error: kind == "error", Text: text}
 }
 
-// staticFiles serves the stylesheet and Datastar. Their names carry no
-// version, so browsers keep them for an hour only.
+// staticFiles serves the stylesheet, Datastar and the components' script.
+// The script's name carries a hash of its sources, so browsers may keep it
+// for good; the others' names carry no version, so an hour only.
 func (s *Site) staticFiles() http.Handler {
 	files := http.StripPrefix(s.base+"/static/", http.FileServerFS(ui.Static()))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +145,11 @@ func (s *Site) staticFiles() http.Handler {
 			http.NotFound(w, r)
 			return
 		}
-		w.Header().Set("Cache-Control", "public, max-age=3600")
+		if strings.HasPrefix(name, "shadcn-templ-") {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
 		files.ServeHTTP(w, r)
 	})
 }

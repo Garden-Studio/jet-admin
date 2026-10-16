@@ -98,7 +98,7 @@ func (a *Auth) login(w http.ResponseWriter, r *http.Request, chrome core.Chrome)
 
 func (a *Auth) renderLogin(w http.ResponseWriter, r *http.Request, status int, page ui.LoginPage) {
 	chrome := core.ChromeFrom(r.Context())
-	page.Chrome = ui.Chrome{SiteTitle: chrome.Title, Base: chrome.BasePath, PageTitle: "Log in"}
+	page.Chrome = ui.Chrome{SiteTitle: chrome.Title, Base: chrome.BasePath, Styles: chrome.Stylesheets, PageTitle: "Log in"}
 	page.Action = chrome.BasePath + "/login"
 	render(w, r, status, ui.Login(page), a)
 }
@@ -112,7 +112,7 @@ func (a *Auth) LogoutHandler() http.Handler {
 		switch r.Method {
 		case http.MethodGet, http.MethodHead:
 			page := ui.LoginPage{
-				Chrome: ui.Chrome{SiteTitle: chrome.Title, Base: chrome.BasePath, PageTitle: "Log out"},
+				Chrome: ui.Chrome{SiteTitle: chrome.Title, Base: chrome.BasePath, Styles: chrome.Stylesheets, PageTitle: "Log out"},
 				Action: chrome.BasePath + "/logout",
 			}
 			render(w, r, http.StatusOK, ui.Logout(page), a)

@@ -1,104 +1,210 @@
 package ui
 
+import (
+	"github.com/garden-studio/jet-admin/internal/ui/components/alert"
+	"github.com/garden-studio/jet-admin/internal/ui/components/alertdialog"
+	"github.com/garden-studio/jet-admin/internal/ui/components/badge"
+	"github.com/garden-studio/jet-admin/internal/ui/components/button"
+	"github.com/garden-studio/jet-admin/internal/ui/components/card"
+	"github.com/garden-studio/jet-admin/internal/ui/components/checkbox"
+	"github.com/garden-studio/jet-admin/internal/ui/components/empty"
+	"github.com/garden-studio/jet-admin/internal/ui/components/field"
+	"github.com/garden-studio/jet-admin/internal/ui/components/icon"
+	"github.com/garden-studio/jet-admin/internal/ui/components/input"
+	"github.com/garden-studio/jet-admin/internal/ui/components/nativeselect"
+	"github.com/garden-studio/jet-admin/internal/ui/components/pagination"
+	"github.com/garden-studio/jet-admin/internal/ui/components/table"
+	"github.com/garden-studio/jet-admin/internal/ui/components/textarea"
+)
+
+// pageHead is a page's title and the buttons beside it.
+templ pageHead(title string) {
+	<div class="flex flex-wrap items-center justify-between gap-3">
+		<h1 class="font-heading text-lg font-semibold tracking-tight">{ title }</h1>
+		<div class="flex flex-wrap items-center gap-2 empty:hidden">
+			{ children... }
+		</div>
+	</div>
+}
+
+// tableFrame is the bordered box around a data table.
+templ tableFrame() {
+	<div class="overflow-hidden rounded-lg bg-card ring-1 ring-foreground/10">
+		{ children... }
+	</div>
+}
+
+// emptyState says there is nothing to show. The children are its actions.
+templ emptyState(title, text string, framed bool) {
+	@empty.Empty(empty.Props{Class: emptyFrame(framed)}) {
+		@empty.Header() {
+			@empty.Media(empty.MediaProps{Variant: empty.MediaVariantIcon}) {
+				@icon.Inbox(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true"}})
+			}
+			@empty.Title() {
+				{ title }
+			}
+			if text != "" {
+				@empty.Description() {
+					{ text }
+				}
+			}
+		}
+		@empty.Content() {
+			{ children... }
+		}
+	}
+}
+
 templ Index(p IndexPage) {
 	@page(p.Chrome) {
-		<div class="page-head"><h1>Site administration</h1></div>
-		<div class="index-grid">
-			<div class="index-models">
+		@pageHead("Site administration")
+		<div class="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+			<div class="grid gap-4">
 				for _, group := range p.Groups {
-					<section class="card">
-						<h2 class="card-title">{ group.Name }</h2>
-						<table class="model-table">
-							<tbody>
+					@card.Card(card.Props{Class: "gap-0 pb-0", Attributes: templ.Attributes{"aria-labelledby": "group-" + slugID(group.Name)}}) {
+						@card.Header(card.HeaderProps{Class: "border-b pb-3"}) {
+							<h2 id={ "group-" + slugID(group.Name) } class="font-heading text-sm font-medium">{ group.Name }</h2>
+						}
+						@table.Table() {
+							@table.Body() {
 								for _, m := range group.Models {
-									<tr>
-										<th scope="row"><a href={ m.URL }>{ m.Plural }</a></th>
-										<td class="actions-cell">
+									@table.Row() {
+										<th scope="row" class="p-2 pl-4 text-left align-middle font-medium">
+											<a href={ m.URL } class="underline-offset-4 hover:underline">{ m.Plural }</a>
+										</th>
+										@table.Cell(table.CellProps{Class: "pr-4 text-right"}) {
 											if m.AddURL != "" {
-												<a class="add-link" href={ m.AddURL }>Add</a>
+												@button.Button(button.Props{Href: m.AddURL, Variant: button.VariantGhost, Size: button.SizeXs, Attributes: templ.Attributes{"aria-label": "Add " + m.Plural}}) {
+													@icon.Plus(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true", "data-icon": "inline-start"}})
+													Add
+												}
 											}
-										</td>
-									</tr>
+										}
+									}
 								}
-							</tbody>
-						</table>
-					</section>
+							}
+						}
+					}
 				}
 				if len(p.Groups) == 0 {
-					<p class="lead">No models are registered yet.</p>
+					@emptyState("No models are registered yet.", "", true)
 				}
 			</div>
 			if p.Audited {
-				<section class="card recent">
-					<h2 class="card-title">Recent actions</h2>
+				@card.Card(card.Props{Class: "gap-0 pb-0", Attributes: templ.Attributes{"aria-labelledby": "recent-actions"}}) {
+					@card.Header(card.HeaderProps{Class: "border-b pb-3"}) {
+						<h2 id="recent-actions" class="font-heading text-sm font-medium">Recent actions</h2>
+					}
 					if len(p.Recent) == 0 {
-						<p class="empty">Nothing has been changed yet.</p>
+						<p class="px-4 py-6 text-center text-muted-foreground">Nothing has been changed yet.</p>
 					} else {
-						<ul class="recent-list">
+						<ul class="divide-y">
 							for _, e := range p.Recent {
-								<li class={ "log-" + e.ActionClass }>
-									<span class="log-action">{ e.Action }</span>
-									if e.ObjectURL != "" {
-										<a href={ e.ObjectURL }>{ e.Object }</a>
-									} else {
-										<span>{ e.Object }</span>
-									}
-									<small>{ e.Model } · { e.User } · <time>{ e.Time }</time></small>
+								<li class="grid gap-1 px-4 py-2.5">
+									<div class="flex min-w-0 items-center gap-2">
+										@actionBadge(e)
+										if e.ObjectURL != "" {
+											<a href={ e.ObjectURL } class="truncate font-medium underline-offset-4 hover:underline">{ e.Object }</a>
+										} else {
+											<span class="truncate font-medium">{ e.Object }</span>
+										}
+									</div>
+									<small class="text-muted-foreground">{ e.Model } · { e.User } · <time>{ e.Time }</time></small>
 								</li>
 							}
 						</ul>
-						<p class="more"><a href={ p.LogURL }>All actions</a></p>
+						<div class="border-t px-2 py-2">
+							@button.Button(button.Props{Href: p.LogURL, Variant: button.VariantLink, Size: button.SizeSm}) {
+								All actions
+							}
+						</div>
 					}
-				</section>
+				}
 			}
 		</div>
 	}
 }
 
+templ actionBadge(e LogEntry) {
+	@badge.Badge(badge.Props{Variant: actionVariant(e.ActionClass)}) {
+		{ e.Action }
+	}
+}
+
 templ logTable(entries []LogEntry, withObject bool) {
-	<div class="table-wrap">
-		<table class="results">
-			<thead>
-				<tr>
-					<th scope="col">Time (UTC)</th>
-					<th scope="col">User</th>
-					<th scope="col">Action</th>
-					if withObject {
-						<th scope="col">Model</th>
-						<th scope="col">Object</th>
+	@tableFrame() {
+		@table.Table() {
+			@table.Header() {
+				@table.Row(table.RowProps{Class: "hover:bg-transparent"}) {
+					@th("") {
+						Time (UTC)
 					}
-					<th scope="col">Change</th>
-				</tr>
-			</thead>
-			<tbody>
+					@th("") {
+						User
+					}
+					@th("") {
+						Action
+					}
+					if withObject {
+						@th("") {
+							Model
+						}
+						@th("") {
+							Object
+						}
+					}
+					@th("") {
+						Change
+					}
+				}
+			}
+			@table.Body() {
 				for _, e := range entries {
-					<tr>
-						<td class="mono nowrap">{ e.Time }</td>
-						<td>{ e.User }</td>
-						<td><span class={ "badge", "badge-" + e.ActionClass }>{ e.Action }</span></td>
+					@table.Row() {
+						@table.Cell(table.CellProps{Class: "pl-3 font-mono"}) {
+							{ e.Time }
+						}
+						@table.Cell() {
+							{ e.User }
+						}
+						@table.Cell() {
+							@actionBadge(e)
+						}
 						if withObject {
-							<td>{ e.Model }</td>
-							<td>
+							@table.Cell() {
+								{ e.Model }
+							}
+							@table.Cell() {
 								if e.ObjectURL != "" {
-									<a href={ e.ObjectURL }>{ e.Object }</a>
+									<a href={ e.ObjectURL } class="font-medium underline-offset-4 hover:underline">{ e.Object }</a>
 								} else {
 									{ e.Object }
 								}
-							</td>
+							}
 						}
-						<td>{ e.Message }</td>
-					</tr>
+						@table.Cell(table.CellProps{Class: "pr-3 whitespace-normal"}) {
+							{ e.Message }
+						}
+					}
 				}
-			</tbody>
-		</table>
-	</div>
+			}
+		}
+	}
+}
+
+// th is a column header.
+templ th(class string) {
+	<th scope="col" data-slot="table-head" class={ "h-9 px-2 text-left align-middle font-medium whitespace-nowrap text-muted-foreground first:pl-3 last:pr-3", class }>
+		{ children... }
+	</th>
 }
 
 templ Log(p LogPage) {
 	@page(p.Chrome) {
-		<div class="page-head"><h1>Actions</h1></div>
+		@pageHead("Actions")
 		if len(p.Entries) == 0 {
-			<p class="empty">{ p.Empty }</p>
+			@emptyState(p.Empty, "", true)
 		} else {
 			@logTable(p.Entries, true)
 			@pager(p.Pager)
@@ -108,9 +214,9 @@ templ Log(p LogPage) {
 
 templ History(p HistoryPage) {
 	@page(p.Chrome) {
-		<div class="page-head"><h1>{ p.Heading }</h1></div>
+		@pageHead(p.Heading)
 		if len(p.Entries) == 0 {
-			<p class="empty">{ p.Empty }</p>
+			@emptyState(p.Empty, "", true)
 		} else {
 			@logTable(p.Entries, false)
 		}
@@ -119,17 +225,36 @@ templ History(p HistoryPage) {
 
 templ List(p ListPage) {
 	@page(p.Chrome) {
-		<div class="page-head">
-			<h1>{ p.Plural }</h1>
+		@pageHead(p.Plural) {
 			if p.AddURL != "" {
-				<a class="button button-primary" href={ p.AddURL }>Add { p.Label }</a>
+				@button.Button(button.Props{Href: p.AddURL}) {
+					@icon.Plus(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true", "data-icon": "inline-start"}})
+					Add { p.Label }
+				}
 			}
-		</div>
+		}
 		if p.Search != nil {
-			<form id="changelist-search" class="toolbar" method="get" action={ p.ListURL } role="search" data-on:submit__prevent={ getForm(p.ListURL) }>
+			<form id="changelist-search" class="flex max-w-xl items-center gap-2" method="get" action={ p.ListURL } role="search" data-on:submit__prevent={ getForm(p.ListURL) }>
 				<label class="sr-only" for="searchbar">Search { p.Plural }</label>
-				<input type="search" id="searchbar" name="q" value={ p.Search.Value } placeholder={ p.Search.Placeholder } autocomplete="off" spellcheck="false" data-on:input__debounce.300ms={ getForm(p.ListURL) }/>
-				<button type="submit" class="button">Search</button>
+				<div class="relative flex-1">
+					@icon.Search(icon.Props{Class: "pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground", Attributes: templ.Attributes{"aria-hidden": "true"}})
+					@input.Input(input.Props{
+						ID:          "searchbar",
+						Type:        "search",
+						Name:        "q",
+						Value:       p.Search.Value,
+						Placeholder: p.Search.Placeholder,
+						Class:       "pl-7",
+						Attributes: templ.Attributes{
+							"autocomplete":                "off",
+							"spellcheck":                  "false",
+							"data-on:input__debounce.300ms": getForm(p.ListURL),
+						},
+					})
+				</div>
+				@button.Button(button.Props{Type: button.TypeSubmit, Variant: button.VariantOutline}) {
+					Search
+				}
 				@listParams(p)
 			</form>
 		}
@@ -155,98 +280,170 @@ templ listParams(p ListPage) {
 }
 
 templ listBody(p ListPage) {
-	<div id="changelist" class={ "changelist", templ.KV("with-filters", len(p.Filters) > 0) }>
-		<div class="changelist-main">
-			<form id="bulk" method="post" action={ p.ListURL } data-on:submit__prevent={ postForm(p.ListURL) }>
-				<div class="list-actions">
+	<div id="changelist" class={ "grid items-start gap-4", templ.KV("lg:grid-cols-[minmax(0,1fr)_14rem]", len(p.Filters) > 0) }>
+		<div class="grid min-w-0 gap-3">
+			<form id="bulk" method="post" action={ p.ListURL } class="m-0 grid gap-3" data-on:submit__prevent={ postForm(p.ListURL) }>
+				<div class="flex min-h-7 flex-wrap items-center gap-3">
 					if p.CanDelete && len(p.Rows) > 0 {
-						<button type="submit" name="action" value="delete" class="button button-danger-outline">Delete selected</button>
+						@button.Button(button.Props{Type: button.TypeSubmit, Variant: button.VariantDestructive, Attributes: templ.Attributes{"name": "action", "value": "delete"}}) {
+							@icon.Trash2(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true", "data-icon": "inline-start"}})
+							Delete selected
+						}
 					}
-					<span class="result-count" aria-live="polite">{ p.ResultLabel }</span>
+					<span class="text-muted-foreground" aria-live="polite">{ p.ResultLabel }</span>
 					if p.ClearURL != "" {
-						<a class="clear" href={ p.ClearURL } data-on:click__prevent={ getHref() }>Clear search and filters</a>
+						@button.Button(button.Props{Href: p.ClearURL, Variant: button.VariantLink, Class: "px-0", Attributes: templ.Attributes{"data-on:click__prevent": getHref()}}) {
+							Clear search and filters
+						}
 					}
 				</div>
 				if len(p.Rows) == 0 {
-					<p class="empty">No { p.Plural } match.</p>
+					@emptyState("No "+p.Plural+" match.", emptyListText(p), true) {
+						if p.ClearURL != "" {
+							@button.Button(button.Props{Href: p.ClearURL, Variant: button.VariantOutline, Attributes: templ.Attributes{"data-on:click__prevent": getHref()}}) {
+								Clear search and filters
+							}
+						}
+					}
 				} else {
-					<div class="table-wrap">
-						<table class="results">
+					@tableFrame() {
+						@table.Table() {
 							<caption class="sr-only">{ p.Plural }</caption>
-							<thead>
-								<tr>
+							@table.Header() {
+								@table.Row(table.RowProps{Class: "hover:bg-transparent"}) {
 									if p.CanDelete {
-										<th scope="col" class="check">
-											<input type="checkbox" aria-label="Select all rows" data-on:change="document.querySelectorAll('#bulk input[name=pk]').forEach(c => c.checked = el.checked)"/>
+										<th scope="col" class="h-9 w-8 pr-0 pl-3 text-left align-middle">
+											@checkbox.Checkbox(checkbox.Props{Attributes: templ.Attributes{
+												"aria-label":     "Select all rows",
+												"data-on:change": "document.querySelectorAll('#bulk input[name=pk]').forEach(c => c.checked = el.checked)",
+											}})
 										</th>
 									}
 									for _, col := range p.Columns {
-										<th scope="col" class={ templ.KV("num", col.Numeric) } aria-sort={ ariaSort(col.Sorted) }>
+										<th scope="col" class={ "h-9 px-2 text-left align-middle font-medium whitespace-nowrap text-muted-foreground first:pl-3 last:pr-3", templ.KV("text-right", col.Numeric) } aria-sort={ ariaSort(col.Sorted) }>
 											if col.SortURL != "" {
-												<a href={ col.SortURL } data-on:click__prevent={ getHref() }>
+												<a href={ col.SortURL } class={ "-mx-1 inline-flex items-center gap-1 rounded-sm px-1 py-0.5 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50", templ.KV("text-foreground", col.Sorted != "") } data-on:click__prevent={ getHref() }>
 													{ col.Label }
-													<span class="sort-mark" aria-hidden="true">{ sortMark(col.Sorted) }</span>
+													@sortIcon(col.Sorted)
 												</a>
 											} else {
 												{ col.Label }
 											}
 										</th>
 									}
-								</tr>
-							</thead>
-							<tbody>
+								}
+							}
+							@table.Body() {
 								for _, row := range p.Rows {
-									<tr>
+									@table.Row(table.RowProps{Class: "has-checked:bg-muted"}) {
 										if p.CanDelete {
-											<td class="check"><input type="checkbox" name="pk" value={ row.PK } aria-label={ "Select " + row.Label }/></td>
+											@table.Cell(table.CellProps{Class: "w-8 pl-3"}) {
+												@checkbox.Checkbox(checkbox.Props{Name: "pk", Value: row.PK, Attributes: templ.Attributes{"aria-label": "Select " + row.Label}})
+											}
 										}
 										for i, c := range row.Cells {
 											if i == 0 {
-												<th scope="row" class={ templ.KV("num", c.Numeric) }><a href={ row.URL }>@cell(withoutHref(c))</a></th>
+												<th scope="row" class={ "p-2 text-left align-middle font-medium whitespace-nowrap first:pl-3 last:pr-3", templ.KV("text-right tabular-nums", c.Numeric) }>
+													<a href={ row.URL } class="underline-offset-4 hover:underline">
+														@cell(withoutHref(c))
+													</a>
+												</th>
 											} else {
-												<td class={ templ.KV("num", c.Numeric) }>@cell(c)</td>
+												@table.Cell(table.CellProps{Class: cellClass(c)}) {
+													@cell(c)
+												}
 											}
 										}
-									</tr>
+									}
 								}
-							</tbody>
-						</table>
-					</div>
+							}
+						}
+					}
 				}
 			</form>
 			@pager(p.Pager)
 		</div>
 		if len(p.Filters) > 0 {
-			<aside class="filters" aria-labelledby="filters-title">
-				<h2 id="filters-title">Filter</h2>
-				for _, f := range p.Filters {
-					<section class="filter">
-						<h3>By { f.Label }</h3>
-						if f.Note != "" {
-							<p class="muted small">{ f.Note }</p>
+			<aside aria-labelledby="filters-title" class="lg:sticky lg:top-16">
+				@card.Card(card.Props{Size: card.SizeSm, Class: "gap-0 py-0"}) {
+					<h2 id="filters-title" class="flex items-center gap-1.5 border-b px-3 py-2.5 font-heading text-sm font-medium">
+						Filter
+					</h2>
+					<div class="grid gap-x-4 divide-y sm:max-lg:grid-cols-2 sm:max-lg:divide-y-0">
+						for _, f := range p.Filters {
+							<section class="grid gap-1 px-3 py-2.5" aria-label={ "By " + f.Label }>
+								<h3 class="font-medium">By { f.Label }</h3>
+								if f.Note != "" {
+									<p class="text-muted-foreground">{ f.Note }</p>
+								}
+								<ul class="grid gap-px">
+									for _, o := range f.Options {
+										<li>
+											<a
+												href={ o.URL }
+												aria-current={ ariaCurrent(o.Active) }
+												data-on:click__prevent={ getHref() }
+												class={ "-mx-1.5 flex h-6 items-center truncate rounded-md px-1.5 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50", templ.KV("bg-muted font-medium text-foreground", o.Active), templ.KV("text-muted-foreground", !o.Active) }
+											>{ o.Label }</a>
+										</li>
+									}
+								</ul>
+							</section>
 						}
-						<ul>
-							for _, o := range f.Options {
-								<li class={ templ.KV("selected", o.Active) }>
-									<a href={ o.URL } aria-current={ ariaCurrent(o.Active) } data-on:click__prevent={ getHref() }>{ o.Label }</a>
-								</li>
-							}
-						</ul>
-					</section>
+					</div>
 				}
 			</aside>
 		}
 	</div>
 }
 
+templ sortIcon(sorted string) {
+	switch sorted {
+		case "asc":
+			@icon.ArrowUp(icon.Props{Class: "size-3", Attributes: templ.Attributes{"aria-hidden": "true"}})
+		case "desc":
+			@icon.ArrowDown(icon.Props{Class: "size-3", Attributes: templ.Attributes{"aria-hidden": "true"}})
+		default:
+			@icon.ChevronsUpDown(icon.Props{Class: "size-3 opacity-40", Attributes: templ.Attributes{"aria-hidden": "true"}})
+	}
+}
+
+templ pager(p Pager) {
+	if p.Pages > 1 {
+		@pagination.Pagination(pagination.Props{Class: "justify-start", Attributes: templ.Attributes{"aria-label": "Pages"}}) {
+			@pagination.Content(pagination.ContentProps{Class: "flex-wrap"}) {
+				@pagination.Item() {
+					@pagination.Previous(pagination.PreviousProps{Href: p.PrevURL, Disabled: p.PrevURL == "", Attributes: pageLinkAttrs(p.PrevURL, "prev")})
+				}
+				for _, link := range p.Links {
+					@pagination.Item() {
+						if link.Gap {
+							@pagination.Ellipsis()
+						} else {
+							@pagination.Link(pagination.LinkProps{Href: link.URL, IsActive: link.Current, Attributes: pageLinkAttrs(link.URL, "")}) {
+								{ link.Label }
+							}
+						}
+					}
+				}
+				@pagination.Item() {
+					@pagination.Next(pagination.NextProps{Href: p.NextURL, Disabled: p.NextURL == "", Attributes: pageLinkAttrs(p.NextURL, "next")})
+				}
+			}
+		}
+	}
+}
+
 templ Form(p FormPage) {
 	@page(p.Chrome) {
-		<div class="page-head">
-			<h1>{ p.Heading }</h1>
+		@pageHead(p.Heading) {
 			if p.HistoryURL != "" {
-				<a class="button" href={ p.HistoryURL }>History</a>
+				@button.Button(button.Props{Href: p.HistoryURL, Variant: button.VariantOutline}) {
+					@icon.History(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true", "data-icon": "inline-start"}})
+					History
+				}
 			}
-		</div>
+		}
 		@FormFragment(p)
 		for _, in := range p.Inlines {
 			@inlineList(in)
@@ -265,182 +462,267 @@ templ FormFragment(p FormPage) {
 }
 
 templ changeForm(p FormPage) {
-	<form class="change-form" method="post" action={ p.Action } novalidate data-on:submit__prevent={ postForm(p.Action) } data-indicator:saving>
+	<form class="m-0 grid gap-4" method="post" action={ p.Action } novalidate data-on:submit__prevent={ postForm(p.Action) } data-indicator:saving>
 		if p.FormError != "" {
-			<div class="message message-error" role="alert">{ p.FormError }</div>
+			@formAlert(p.FormError)
 		} else if hasErrors(p.Fields) {
-			<div class="message message-error" role="alert">Please correct the errors below.</div>
+			@formAlert("Please correct the errors below.")
 		}
-		<div class="card fields">
-			for _, f := range p.Fields {
-				@formRow(f)
-			}
-		</div>
-		<div class="submit-row">
+		@card.Card(card.Props{Class: "gap-0 py-0"}) {
+			<div class="divide-y">
+				for _, f := range p.Fields {
+					@formRow(f)
+				}
+			</div>
+		}
+		<div class="flex flex-wrap items-center gap-2">
 			if p.CanSave {
-				<button type="submit" class="button button-primary" name="_save" value="1" data-attr:disabled="$saving">{ p.SaveLabel }</button>
-				<button type="submit" class="button" name="_continue" value="1" data-attr:disabled="$saving">Save and continue editing</button>
-				<button type="submit" class="button" name="_addanother" value="1" data-attr:disabled="$saving">Save and add another</button>
+				@button.Button(button.Props{Type: button.TypeSubmit, Attributes: templ.Attributes{"name": "_save", "value": "1", "data-attr:disabled": "$saving"}}) {
+					{ p.SaveLabel }
+				}
+				@button.Button(button.Props{Type: button.TypeSubmit, Variant: button.VariantOutline, Attributes: templ.Attributes{"name": "_continue", "value": "1", "data-attr:disabled": "$saving"}}) {
+					Save and continue editing
+				}
+				@button.Button(button.Props{Type: button.TypeSubmit, Variant: button.VariantOutline, Attributes: templ.Attributes{"name": "_addanother", "value": "1", "data-attr:disabled": "$saving"}}) {
+					Save and add another
+				}
 			}
 			if p.DeleteURL != "" {
-				<a class="button button-danger-outline push-right" href={ p.DeleteURL } data-on:click__prevent={ getHref() }>Delete</a>
+				@button.Button(button.Props{Href: p.DeleteURL, Variant: button.VariantDestructive, Class: "sm:ml-auto", Attributes: templ.Attributes{"data-on:click__prevent": getHref()}}) {
+					@icon.Trash2(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true", "data-icon": "inline-start"}})
+					Delete
+				}
 			}
 		</div>
 	</form>
 }
 
+templ formAlert(text string) {
+	@alert.Alert(alert.Props{Variant: alert.VariantDestructive}) {
+		@icon.CircleAlert(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true"}})
+		@alert.Description() {
+			{ text }
+		}
+	}
+}
+
+// formRow is one field: the label in a column of its own on wide screens,
+// above the input on narrow ones.
 templ formRow(f FormField) {
-	<div class={ "form-row", templ.KV("has-error", f.Error != ""), templ.KV("is-checkbox", f.Input == InputCheckbox) }>
+	@field.Field(field.Props{
+		Class:      "grid gap-1.5 px-4 py-3 data-[invalid=true]:bg-destructive/5 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-x-6",
+		Attributes: invalidAttr(f),
+	}) {
 		if f.Input == InputReadOnly {
-			<span class="label" id={ fieldID(f.Name) + "-label" }>{ f.Label }</span>
-			<div class="control readonly" aria-labelledby={ fieldID(f.Name) + "-label" }>
-				@cell(f.Cell)
+			@field.Title(field.TitleProps{ID: fieldID(f.Name) + "-label", Class: "md:pt-1"}) {
+				{ f.Label }
+			}
+			<div class="grid gap-1 md:pt-1" role="group" aria-labelledby={ fieldID(f.Name) + "-label" }>
+				<div class="break-words whitespace-pre-wrap">
+					@cell(f.Cell)
+				</div>
 				if f.Help != "" || f.Note != "" {
-					<p class="help" id={ fieldID(f.Name) + "-help" }>{ joinHelp(f) }</p>
+					@field.Description(field.DescriptionProps{ID: fieldID(f.Name) + "-help"}) {
+						{ joinHelp(f) }
+					}
 				}
 			</div>
 		} else if f.Input == InputCheckbox {
-			<span class="label" aria-hidden="true"></span>
-			<div class="control">
-				<label class="check-label" for={ fieldID(f.Name) }>
-					<input type="checkbox" id={ fieldID(f.Name) } name={ f.Name } value="true" checked?={ f.Checked } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+			<span aria-hidden="true" class="max-md:hidden"></span>
+			<div class="grid gap-1">
+				@field.Label(field.LabelProps{For: fieldID(f.Name), Class: "w-fit"}) {
+					@checkbox.Checkbox(checkbox.Props{ID: fieldID(f.Name), Name: f.Name, Value: "true", Checked: f.Checked, Attributes: inputAttrs(f)})
 					{ f.Label }
-				</label>
+				}
 				@fieldNotes(f)
 			</div>
 		} else {
-			<label class="label" for={ fieldID(f.Name) }>
-				{ f.Label }
-				if f.Required {
-					<span class="required" aria-hidden="true">*</span>
-				}
-			</label>
-			<div class="control">
-				@input(f)
+			@field.Label(field.LabelProps{For: fieldID(f.Name), Class: "md:pt-1.5 md:items-start"}) {
+				<span>
+					{ f.Label }
+					if f.Required {
+						<span class="text-destructive" aria-hidden="true">*</span>
+					}
+				</span>
+			}
+			<div class="grid max-w-xl min-w-0 gap-1">
+				@fieldInput(f)
 				if f.Related != nil {
-					<p class="related">@cell(*f.Related)</p>
+					<p>
+						@cell(*f.Related)
+					</p>
 				}
 				@fieldNotes(f)
 			</div>
 		}
-	</div>
+	}
 }
 
 templ fieldNotes(f FormField) {
 	if f.Help != "" || f.Note != "" {
-		<p class="help" id={ fieldID(f.Name) + "-help" }>{ joinHelp(f) }</p>
+		@field.Description(field.DescriptionProps{ID: fieldID(f.Name) + "-help"}) {
+			{ joinHelp(f) }
+		}
 	}
 	if f.Error != "" {
-		<p class="error" id={ fieldID(f.Name) + "-error" }>{ f.Error }</p>
+		@field.Error(field.ErrorProps{ID: fieldID(f.Name) + "-error"}) {
+			{ f.Error }
+		}
 	}
 }
 
-templ input(f FormField) {
+templ fieldInput(f FormField) {
 	switch f.Input {
 		case InputTextarea:
-			<textarea id={ fieldID(f.Name) } name={ f.Name } rows={ textareaRows(f.Value) } class={ templ.KV("mono", f.Mono) } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) } spellcheck={ spellcheck(f) }>{ f.Value }</textarea>
+			@textarea.Textarea(textarea.Props{ID: fieldID(f.Name), Name: f.Name, Value: f.Value, Rows: textareaRowsN(f.Value), Class: monoClass(f.Mono), Attributes: withAttrs(inputAttrs(f), templ.Attributes{"spellcheck": spellcheck(f), "required": f.Required})})
 		case InputNumber:
-			<input type="number" step="1" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } inputmode="numeric" required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+			@input.Input(input.Props{Type: "number", ID: fieldID(f.Name), Name: f.Name, Value: f.Value, Required: f.Required, Attributes: withAttrs(inputAttrs(f), templ.Attributes{"step": "1", "inputmode": "numeric"})})
 		case InputDecimal:
-			<input type="number" step="any" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } inputmode="decimal" required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+			@input.Input(input.Props{Type: "number", ID: fieldID(f.Name), Name: f.Name, Value: f.Value, Required: f.Required, Attributes: withAttrs(inputAttrs(f), templ.Attributes{"step": "any", "inputmode": "decimal"})})
 		case InputDateTime:
-			<input type="datetime-local" step="1" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+			@input.Input(input.Props{Type: "datetime-local", ID: fieldID(f.Name), Name: f.Name, Value: f.Value, Required: f.Required, Class: "w-auto", Attributes: withAttrs(inputAttrs(f), templ.Attributes{"step": "1"})})
 		case InputDate:
-			<input type="date" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+			@input.Input(input.Props{Type: "date", ID: fieldID(f.Name), Name: f.Name, Value: f.Value, Required: f.Required, Class: "w-auto", Attributes: inputAttrs(f)})
 		case InputPassword:
-			<input type="password" id={ fieldID(f.Name) } name={ f.Name } autocomplete="new-password" required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }/>
+			@input.Input(input.Props{Type: "password", ID: fieldID(f.Name), Name: f.Name, Required: f.Required, Attributes: withAttrs(inputAttrs(f), templ.Attributes{"autocomplete": "new-password"})})
 		case InputSelect, InputNullBool:
-			<select id={ fieldID(f.Name) } name={ f.Name } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) }>
+			@nativeselect.NativeSelect(nativeselect.Props{ID: fieldID(f.Name), Name: f.Name, Required: f.Required, Class: "w-full sm:w-fit sm:min-w-48", Attributes: inputAttrs(f)}) {
 				for _, o := range f.Options {
-					<option value={ o.Value } selected?={ o.Selected }>{ o.Label }</option>
+					@nativeselect.Option(nativeselect.OptionProps{Value: o.Value, Selected: o.Selected}) {
+						{ o.Label }
+					}
 				}
-			</select>
+			}
 		default:
-			<input type="text" id={ fieldID(f.Name) } name={ f.Name } value={ f.Value } class={ templ.KV("mono", f.Mono) } required?={ f.Required } aria-describedby={ describedBy(f) } aria-invalid={ invalid(f) } spellcheck={ spellcheck(f) }/>
+			@input.Input(input.Props{Type: "text", ID: fieldID(f.Name), Name: f.Name, Value: f.Value, Required: f.Required, Class: monoClass(f.Mono), Attributes: withAttrs(inputAttrs(f), templ.Attributes{"spellcheck": spellcheck(f)})})
 	}
 }
 
 templ inlineList(in InlineList) {
-	<section class="card inline" aria-labelledby={ "inline-" + slugID(in.Plural) }>
-		<div class="inline-head">
-			<h2 class="card-title" id={ "inline-" + slugID(in.Plural) }>{ in.Plural } <span class="count">{ i64toa(in.Total) }</span></h2>
-			<div class="inline-links">
+	@card.Card(card.Props{Class: "gap-0 py-0", Attributes: templ.Attributes{"aria-labelledby": "inline-" + slugID(in.Plural)}}) {
+		<div class="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
+			<h2 class="flex items-center gap-2 font-heading text-sm font-medium" id={ "inline-" + slugID(in.Plural) }>
+				{ in.Plural }
+				@badge.Badge(badge.Props{Variant: badge.VariantSecondary}) {
+					{ i64toa(in.Total) }
+				}
+			</h2>
+			<div class="flex items-center gap-1">
 				if in.AllURL != "" && in.Total > int64(len(in.Rows)) {
-					<a href={ in.AllURL }>View all</a>
+					@button.Button(button.Props{Href: in.AllURL, Variant: button.VariantGhost, Size: button.SizeSm}) {
+						View all
+					}
 				}
 				if in.AddURL != "" {
-					<a class="button button-small" href={ in.AddURL }>Add another</a>
+					@button.Button(button.Props{Href: in.AddURL, Variant: button.VariantOutline, Size: button.SizeSm}) {
+						@icon.Plus(icon.Props{Attributes: templ.Attributes{"aria-hidden": "true", "data-icon": "inline-start"}})
+						Add another
+					}
 				}
 			</div>
 		</div>
 		if len(in.Rows) == 0 {
-			<p class="empty">None yet.</p>
+			<p class="px-4 py-4 text-muted-foreground">None yet.</p>
 		} else {
-			<div class="table-wrap">
-				<table class="results">
-					<thead>
-						<tr>
-							for _, c := range in.Columns {
-								<th scope="col">{ c }</th>
+			@table.Table() {
+				@table.Header() {
+					@table.Row(table.RowProps{Class: "hover:bg-transparent"}) {
+						for _, c := range in.Columns {
+							@th("first:pl-4 last:pr-4") {
+								{ c }
 							}
-						</tr>
-					</thead>
-					<tbody>
-						for _, row := range in.Rows {
-							<tr>
-								for i, c := range row.Cells {
-									if i == 0 {
-										<th scope="row"><a href={ row.URL }>@cell(withoutHref(c))</a></th>
-									} else {
-										<td class={ templ.KV("num", c.Numeric) }>@cell(c)</td>
+						}
+					}
+				}
+				@table.Body() {
+					for _, row := range in.Rows {
+						@table.Row() {
+							for i, c := range row.Cells {
+								if i == 0 {
+									<th scope="row" class="p-2 pl-4 text-left align-middle font-medium whitespace-nowrap">
+										<a href={ row.URL } class="underline-offset-4 hover:underline">
+											@cell(withoutHref(c))
+										</a>
+									</th>
+								} else {
+									@table.Cell(table.CellProps{Class: cellClass(c) + " last:pr-4"}) {
+										@cell(c)
 									}
 								}
-							</tr>
+							}
 						}
-					</tbody>
-				</table>
-			</div>
+					}
+				}
+			}
 		}
-	</section>
-}
-
-templ Delete(p DeletePage) {
-	@page(p.Chrome) {
-		<div class="page-head"><h1>{ p.Heading }</h1></div>
-		<div class="card confirm">
-			@deleteBody(p)
-		</div>
 	}
 }
 
-// DeleteDialog is the same confirmation as a dialog over the page.
+// Delete is the confirmation as a page: what a delete link shows without
+// JavaScript.
+templ Delete(p DeletePage) {
+	@page(p.Chrome) {
+		@card.Card(card.Props{Class: "max-w-xl", Attributes: templ.Attributes{"role": "group", "aria-labelledby": "delete-title"}}) {
+			@card.Header() {
+				<h1 id="delete-title" class="font-heading text-base font-semibold">{ p.Heading }</h1>
+			}
+			@card.Content(card.ContentProps{Class: "grid gap-3"}) {
+				@deleteSummary(p)
+				@deleteForm(p) {
+					@button.Button(button.Props{Href: p.CancelURL, Variant: button.VariantOutline}) {
+						No, keep it
+					}
+				}
+			}
+		}
+	}
+}
+
+// DeleteDialog is the same confirmation over the page, patched into
+// #dialog by Datastar. shadcn-templ's alert dialog script opens it (it is
+// rendered open), traps focus, closes it on Escape or "No, keep it" and
+// moves it to <body> while it is open; Datastar only sends the form. A new
+// id each time makes the patch replace the old dialog rather than morph
+// it, so the script sees a new one to open.
 templ DeleteDialog(p DeletePage) {
 	<div id="dialog">
-		<div class="modal" data-on:keydown__window={ "evt.key === 'Escape' && " + closeDialog }>
-			<div class="modal-backdrop" data-on:click={ closeDialog }></div>
-			<div class="modal-card card" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-body">
-				<h2 id="dialog-title">{ p.Heading }</h2>
-				<div id="dialog-body">
-					@deleteBody(p)
+		@alertdialog.AlertDialog(alertdialog.Props{DefaultOpen: true}) {
+			@alertdialog.Content(alertdialog.ContentProps{Class: "data-[size=default]:sm:max-w-md"}) {
+				@alertdialog.Header() {
+					@alertdialog.Title() {
+						{ p.Heading }
+					}
+				}
+				<div class="grid gap-3 text-xs/relaxed">
+					@deleteSummary(p)
 				</div>
-			</div>
-		</div>
+				@deleteForm(p) {
+					@alertdialog.Cancel(alertdialog.CancelProps{Attributes: templ.Attributes{"data-templ-initial-focus": true}}) {
+						No, keep it
+					}
+				}
+			}
+		}
 	</div>
 }
 
-templ deleteBody(p DeletePage) {
+templ deleteSummary(p DeletePage) {
 	if p.Bulk {
 		<p>These { plural(int64(len(p.Objects)), p.Label, p.Plural) } will be deleted:</p>
 	} else {
 		<p>This { p.Label } will be deleted:</p>
 	}
-	<ul class="delete-list">
+	<ul class="max-h-[40vh] list-disc overflow-auto pl-5">
 		for _, o := range p.Objects {
-			<li><a href={ o.URL }>{ o.Label }</a></li>
+			<li><a href={ o.URL } class="font-medium underline-offset-4 hover:underline">{ o.Label }</a></li>
 		}
 	</ul>
-	<p class="muted">This cannot be undone.</p>
-	<form method="post" action={ p.Action } data-on:submit__prevent={ postForm(p.Action) } data-indicator:deleting>
+	<p class="text-muted-foreground">This cannot be undone.</p>
+}
+
+// deleteForm posts the confirmation; the children are the way back.
+templ deleteForm(p DeletePage) {
+	<form method="post" action={ p.Action } class="m-0" data-on:submit__prevent={ postForm(p.Action) } data-indicator:deleting>
 		for _, key := range p.Keys {
 			<input type="hidden" name="pk" value={ key }/>
 		}
@@ -448,12 +730,10 @@ templ deleteBody(p DeletePage) {
 			<input type="hidden" name="action" value="delete"/>
 		}
 		<input type="hidden" name="confirm" value="yes"/>
-		<div class="submit-row">
-			<button type="submit" class="button button-danger" data-init="el.focus()" data-attr:disabled="$deleting">Yes, delete</button>
-			if p.Dialog {
-				<button type="button" class="button" data-on:click={ closeDialog }>No, keep it</button>
-			} else {
-				<a class="button" href={ p.CancelURL }>No, keep it</a>
+		<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+			{ children... }
+			@button.Button(button.Props{Type: button.TypeSubmit, Variant: button.VariantDestructive, Attributes: templ.Attributes{"data-attr:disabled": "$deleting"}}) {
+				Yes, delete
 			}
 		</div>
 	</form>
@@ -461,21 +741,36 @@ templ deleteBody(p DeletePage) {
 
 templ Login(p LoginPage) {
 	@page(p.Chrome) {
-		<div class="login">
-			<form class="card login-card" method="post" action={ p.Action } data-on:submit__prevent={ postForm(p.Action) } data-indicator:signing>
-				<h1>{ p.Chrome.SiteTitle }</h1>
-				@LoginError(p.Error)
-				<input type="hidden" name="next" value={ p.Next }/>
-				<div class="form-row stacked">
-					<label class="label" for="login-username">Username</label>
-					<input type="text" id="login-username" name="username" value={ p.Username } autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus/>
-				</div>
-				<div class="form-row stacked">
-					<label class="label" for="login-password">Password</label>
-					<input type="password" id="login-password" name="password" autocomplete="current-password" required/>
-				</div>
-				<button type="submit" class="button button-primary button-block" data-attr:disabled="$signing">Log in</button>
-			</form>
+		<div class="grid flex-1 place-items-center py-8">
+			@card.Card(card.Props{Class: "w-full max-w-sm"}) {
+				@card.Header() {
+					<h1 class="font-heading text-base font-semibold">{ p.Chrome.SiteTitle }</h1>
+					@card.Description() {
+						Sign in to continue.
+					}
+				}
+				@card.Content() {
+					<form class="m-0 grid gap-4" method="post" action={ p.Action } data-on:submit__prevent={ postForm(p.Action) } data-indicator:signing>
+						@LoginError(p.Error)
+						<input type="hidden" name="next" value={ p.Next }/>
+						@field.Field() {
+							@field.Label(field.LabelProps{For: "login-username"}) {
+								Username
+							}
+							@input.Input(input.Props{ID: "login-username", Name: "username", Value: p.Username, Required: true, Attributes: templ.Attributes{"autocomplete": "username", "autocapitalize": "none", "spellcheck": "false", "autofocus": true}})
+						}
+						@field.Field() {
+							@field.Label(field.LabelProps{For: "login-password"}) {
+								Password
+							}
+							@input.Input(input.Props{ID: "login-password", Type: "password", Name: "password", Required: true, Attributes: templ.Attributes{"autocomplete": "current-password"}})
+						}
+						@button.Button(button.Props{Type: button.TypeSubmit, Class: "w-full", Attributes: templ.Attributes{"data-attr:disabled": "$signing"}}) {
+							Log in
+						}
+					</form>
+				}
+			}
 		</div>
 	}
 }
@@ -483,21 +778,31 @@ templ Login(p LoginPage) {
 // LoginError is the login form's message, patched alone after a failed
 // Datastar sign-in.
 templ LoginError(text string) {
-	<div id="login-error" aria-live="assertive">
+	<div id="login-error" aria-live="assertive" class="empty:hidden">
 		if text != "" {
-			<div class="message message-error" role="alert">{ text }</div>
+			@formAlert(text)
 		}
 	</div>
 }
 
 templ Logout(p LoginPage) {
 	@page(p.Chrome) {
-		<div class="login">
-			<form class="card login-card" method="post" action={ p.Action }>
-				<h1>Log out</h1>
-				<p>Log out of { p.Chrome.SiteTitle }?</p>
-				<button type="submit" class="button button-primary button-block">Log out</button>
-			</form>
+		<div class="grid flex-1 place-items-center py-8">
+			@card.Card(card.Props{Class: "w-full max-w-sm"}) {
+				@card.Header() {
+					<h1 class="font-heading text-base font-semibold">Log out</h1>
+					@card.Description() {
+						Log out of { p.Chrome.SiteTitle }?
+					}
+				}
+				@card.Content() {
+					<form class="m-0" method="post" action={ p.Action }>
+						@button.Button(button.Props{Type: button.TypeSubmit, Class: "w-full"}) {
+							Log out
+						}
+					</form>
+				}
+			}
 		</div>
 	}
 }

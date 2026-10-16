@@ -66,6 +66,10 @@ type Config struct {
 	// AuditLog records every add, change and delete in admin_log (see
 	// Schema) and shows them on the index, history and log pages.
 	AuditLog bool
+	// Stylesheets are linked on every page after the admin's own, in
+	// order: the way to theme it by overriding its CSS variables (see the
+	// README, Styling). Absolute paths or URLs.
+	Stylesheets []string
 }
 
 // Site is an admin: its registered models and the Handler serving them.
@@ -83,6 +87,7 @@ type Site struct {
 
 	catalogMu sync.Mutex
 	catalog   *catalog
+	styles    []string
 }
 
 // New makes a Site. It fails without a DB or an Authenticator.
@@ -112,6 +117,7 @@ func New(cfg Config) (*Site, error) {
 		auth:     cfg.Auth,
 		logger:   logger,
 		auditLog: cfg.AuditLog,
+		styles:   cfg.Stylesheets,
 		models:   map[string]*modelPage{},
 	}, nil
 }
@@ -177,7 +183,7 @@ func (s *Site) Handler() http.Handler {
 
 	protected := http.NewCrossOriginProtection().Handler(mux)
 	static := s.staticFiles()
-	chrome := core.Chrome{Title: s.title, BasePath: s.base}
+	chrome := core.Chrome{Title: s.title, BasePath: s.base, Stylesheets: s.styles}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// The static files are routed here rather than by the mux, where
 		// BasePath/static/ would overlap BasePath/{slug}/.

@@ -97,9 +97,10 @@ func TestAddLeavesBlankDefaultsToTheDatabase(t *testing.T) {
 
 	t.Run("the add form shows constant defaults, and no zero values", func(t *testing.T) {
 		body := f.get("/admin/customers/add").body
-		contains(t, body, `<option value="free" selected>`, `name="is_active" value="true" checked`, `name="id" value=""`)
+		contains(t, body, `value="free" selected>`, `name="is_active" value="true" checked`)
+		blankInput(t, body, "id")
 		lacks(t, body, uuid.Nil.String())
-		contains(t, f.get("/admin/orders/add").body, `name="total_cents" value=""`)
+		blankInput(t, f.get("/admin/orders/add").body, "total_cents")
 	})
 }
 
@@ -235,21 +236,35 @@ func TestFormErrors(t *testing.T) {
 		if r.status != http.StatusUnprocessableEntity {
 			t.Fatalf("status %d", r.status)
 		}
-		contains(t, r.body, `id="field-password_confirm-error">The two passwords differ.`)
+		fieldError(t, r.body, "password_confirm", "The two passwords differ.")
 	})
 }
 
 // fieldError checks the error shown under field holds want.
 func fieldError(t *testing.T, body, field, want string) {
 	t.Helper()
-	marker := `id="field-` + field + `-error">`
+	marker := `id="field-` + field + `-error"`
 	i := strings.Index(body, marker)
 	if i < 0 {
 		t.Fatalf("no error on %s", field)
 	}
-	text, _, _ := strings.Cut(body[i+len(marker):], "<")
+	_, rest, _ := strings.Cut(body[i:], ">")
+	text, _, _ := strings.Cut(rest, "<")
 	if !strings.Contains(text, want) {
 		t.Errorf("error on %s is %q, want %q", field, text, want)
+	}
+}
+
+// blankInput checks that the input named name is on the page with no value.
+func blankInput(t *testing.T, body, name string) {
+	t.Helper()
+	i := strings.Index(body, `name="`+name+`"`)
+	if i < 0 {
+		t.Fatalf("no input %s", name)
+	}
+	tag, _, _ := strings.Cut(body[i:], ">")
+	if strings.Contains(tag, `value="`) && !strings.Contains(tag, `value=""`) {
+		t.Errorf("input %s has a value: %s", name, tag)
 	}
 }
 

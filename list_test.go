@@ -84,6 +84,6 @@ func TestList(t *testing.T) {
 		ada := f.addCustomer("Ada Two", "ada2@example.com", "pro", true, now)
 		f.addOrder(ada, "paid", 1200)
 		body := f.get("/admin/orders/").body
-		contains(t, body, ">Ada Two<", `href="/admin/customers/`+ada.String()+`/"`, "<th scope=\"col\" class=\"\" aria-sort=\"none\"><a href=\"/admin/orders/?o=customer_id\"")
+		contains(t, body, ">Ada Two<", `href="/admin/customers/`+ada.String()+`/"`, `aria-sort="none"><a href="/admin/orders/?o=customer_id"`)
 	})
 }
