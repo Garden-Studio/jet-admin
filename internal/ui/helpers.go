@@ -46,7 +46,6 @@ func getForm(url string) string { return "@get(" + js(url) + ", {contentType: 'f
 // postForm sends the closest form with Datastar as a POST.
 func postForm(url string) string { return "@post(" + js(url) + ", {contentType: 'form'})" }
 
-
 func i64toa(n int64) string { return strconv.FormatInt(n, 10) }
 
 func fieldID(name string) string { return "field-" + name }
