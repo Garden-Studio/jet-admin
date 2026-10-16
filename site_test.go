@@ -86,7 +86,7 @@ func TestHostAuthenticatorAndPermissions(t *testing.T) {
 	f := newFixture(t)
 	id := f.addCustomer("Ada", "ada@example.com", "free", true, time.Now())
 	mount := func(a jetadmin.Authenticator) http.Handler {
-		site, err := jetadmin.New(jetadmin.Config{DB: f.pool, Auth: a, Logger: slog.New(slog.DiscardHandler), AuditLog: true})
+		site, err := jetadmin.New(jetadmin.Config{DB: f.pool, Auth: a, BasePath: "/", Logger: slog.New(slog.DiscardHandler), AuditLog: true})
 		must(t, err)
 		must(t, jetadmin.Register(site, jetadmin.Model[model.Customers]{Table: table.Customers, Permissions: jetadmin.ViewOnly}))
 		return site.Handler()
@@ -131,7 +131,7 @@ func TestHostAuthenticatorAndPermissions(t *testing.T) {
 
 func TestAuditLogOfAHostUser(t *testing.T) {
 	f := newFixture(t)
-	site, err := jetadmin.New(jetadmin.Config{DB: f.pool, Auth: noLogin{user: &jetadmin.User{Username: "host-user"}}, Logger: slog.New(slog.DiscardHandler), AuditLog: true})
+	site, err := jetadmin.New(jetadmin.Config{DB: f.pool, Auth: noLogin{user: &jetadmin.User{Username: "host-user"}}, BasePath: "/", Logger: slog.New(slog.DiscardHandler), AuditLog: true})
 	must(t, err)
 	must(t, jetadmin.Register(site, jetadmin.Model[model.Customers]{Table: table.Customers}))
 	r := httptest.NewRequest(http.MethodPost, "/customers/add", nil)

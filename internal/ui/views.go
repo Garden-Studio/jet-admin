@@ -26,9 +26,25 @@ type Chrome struct {
 	User      string // username, "" on the login page
 	LogoutURL string // "" when the Authenticator serves no logout
 	Nav       []NavGroup
-	Active    string // slug of the model the page is about
-	Crumbs    []Crumb
-	Flash     *Flash
+	// NavCollapsed renders the sidebar folded: the visitor folded it last
+	// (the sidebar script's cookie).
+	NavCollapsed bool
+	Active       string // slug of the model the page is about
+	Crumbs       []Crumb
+	Flash        *Flash
+}
+
+// NavIcons reports whether every model in the sidebar has an icon, so it
+// can fold to them.
+func (c Chrome) NavIcons() bool {
+	for _, g := range c.Nav {
+		for _, m := range g.Models {
+			if m.Icon == "" {
+				return false
+			}
+		}
+	}
+	return len(c.Nav) > 0
 }
 
 // StaticURL is the address of a static file.
@@ -41,6 +57,7 @@ type NavGroup struct {
 
 type NavModel struct {
 	Slug, Plural, URL, AddURL string
+	Icon                      string // a lucide icon's name, or ""
 }
 
 type Crumb struct {
@@ -242,11 +259,12 @@ type HistoryPage struct {
 }
 
 type LoginPage struct {
-	Chrome   Chrome
-	Action   string
-	Next     string
-	Username string
-	Error    string
+	Chrome        Chrome
+	Action        string
+	Next          string
+	Username      string
+	UsernameLabel string // "Username" when empty
+	Error         string
 }
 
 type MessagePage struct {

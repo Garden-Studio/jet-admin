@@ -755,7 +755,11 @@ templ Login(p LoginPage) {
 						<input type="hidden" name="next" value={ p.Next }/>
 						@field.Field() {
 							@field.Label(field.LabelProps{For: "login-username"}) {
-								Username
+								if p.UsernameLabel != "" {
+									{ p.UsernameLabel }
+								} else {
+									Username
+								}
 							}
 							@input.Input(input.Props{ID: "login-username", Name: "username", Value: p.Username, Required: true, Attributes: templ.Attributes{"autocomplete": "username", "autocapitalize": "none", "spellcheck": "false", "autofocus": true}})
 						}

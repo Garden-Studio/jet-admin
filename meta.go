@@ -12,6 +12,8 @@ import (
 
 	"github.com/go-jet/jet/v2/postgres"
 	"github.com/google/uuid"
+
+	"github.com/garden-studio/jet-admin/internal/ui/components/icon"
 )
 
 // modelPage is a registered Model with its type parameter erased: the
@@ -21,6 +23,7 @@ type modelPage struct {
 	site                *Site
 	slug, label, plural string
 	group               string
+	icon                string
 	table               postgres.Table
 	typ                 reflect.Type
 
@@ -205,6 +208,9 @@ func newModelPage[M any](s *Site, m Model[M]) (*modelPage, error) {
 	if m.Table == nil {
 		return nil, errors.New("Model.Table is required")
 	}
+	if m.Icon != "" && !icon.Known(m.Icon) {
+		return nil, fmt.Errorf("Model.Icon %q is no lucide icon", m.Icon)
+	}
 	typ := reflect.TypeFor[M]()
 	if typ.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("the model is a %s, not a struct", typ)
@@ -236,6 +242,7 @@ func newModelPage[M any](s *Site, m Model[M]) (*modelPage, error) {
 		extra:    m.Extra,
 		perms:    m.Permissions,
 		group:    m.Group,
+		icon:     m.Icon,
 	}
 	for _, c := range all {
 		index, ok := fields[c.Name()]

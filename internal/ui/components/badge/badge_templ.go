@@ -224,7 +224,8 @@ func Badge(props ...Props) templ.Component {
 
 // 1:1 base/ui/badge.tsx: structure lives here, the look comes from the
 // active style-*.css via the classes.
-const baseClasses = "h-5 gap-1 rounded-full border border-transparent px-2 py-0.5 text-[0.625rem] font-medium transition-all has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-2.5! group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none"
+// jet-admin: 12px text, not mira's 10px, to match the scale.
+const baseClasses = "h-5 gap-1 rounded-full border border-transparent px-2 py-0.5 text-[0.75rem] font-medium transition-all has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&>svg]:size-2.5! group/badge inline-flex w-fit shrink-0 items-center justify-center overflow-hidden whitespace-nowrap focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none"
 
 func badgeClasses(p Props) string {
 	return utils.CN(baseClasses, p.variantClasses(), p.Class)

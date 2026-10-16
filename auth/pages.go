@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -100,7 +101,7 @@ func (a *Auth) renderLogin(w http.ResponseWriter, r *http.Request, status int, p
 	chrome := core.ChromeFrom(r.Context())
 	page.Chrome = ui.Chrome{SiteTitle: chrome.Title, Base: chrome.BasePath, Styles: chrome.Stylesheets, PageTitle: "Log in"}
 	page.Action = chrome.BasePath + "/login"
-	render(w, r, status, ui.Login(page), a)
+	render(w, r, status, ui.Login(page), a.logger)
 }
 
 // LogoutHandler asks to log out on a GET and logs out on a POST, so a
@@ -115,7 +116,7 @@ func (a *Auth) LogoutHandler() http.Handler {
 				Chrome: ui.Chrome{SiteTitle: chrome.Title, Base: chrome.BasePath, Styles: chrome.Stylesheets, PageTitle: "Log out"},
 				Action: chrome.BasePath + "/logout",
 			}
-			render(w, r, http.StatusOK, ui.Logout(page), a)
+			render(w, r, http.StatusOK, ui.Logout(page), a.logger)
 		case http.MethodPost:
 			if err := a.endSession(r); err != nil {
 				a.logger.ErrorContext(r.Context(), "jetadmin/auth: end the session", "error", err)
@@ -129,13 +130,13 @@ func (a *Auth) LogoutHandler() http.Handler {
 	})
 }
 
-func render(w http.ResponseWriter, r *http.Request, status int, page templ.Component, a *Auth) {
+func render(w http.ResponseWriter, r *http.Request, status int, page templ.Component, logger *slog.Logger) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)
 	if r.Method == http.MethodHead {
 		return
 	}
 	if err := page.Render(r.Context(), w); err != nil {
-		a.logger.DebugContext(r.Context(), "jetadmin/auth: render", "error", err)
+		logger.DebugContext(r.Context(), "jetadmin/auth: render", "error", err)
 	}
 }

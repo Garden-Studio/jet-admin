@@ -48,6 +48,9 @@ type Authenticator = core.Authenticator
 // sign-out pages, mounted at BasePath/login and BasePath/logout.
 type LoginProvider = core.LoginProvider
 
+// DefaultBasePath is where a Site is mounted when Config.BasePath is empty.
+const DefaultBasePath = "/admin"
+
 // Config is the Site's setup.
 type Config struct {
 	// DB runs every statement; a *pgxpool.Pool.
@@ -55,7 +58,8 @@ type Config struct {
 	// Title is the name in the header and the page titles: "Sumi admin".
 	Title string
 	// BasePath is where the Handler is mounted, without the trailing
-	// slash: "/admin". The admin's pages live under BasePath + "/".
+	// slash; "/admin" when empty. The admin's pages live under
+	// BasePath + "/". "/" mounts it at the root.
 	BasePath string
 	// Auth tells who is signed in. Required: the admin shows nothing to
 	// anyone it does not authenticate.
@@ -99,6 +103,9 @@ func New(cfg Config) (*Site, error) {
 		return nil, errors.New("jetadmin: Config.Auth is required")
 	}
 	base := strings.TrimRight(cfg.BasePath, "/")
+	if cfg.BasePath == "" {
+		base = DefaultBasePath
+	}
 	if base != "" && !strings.HasPrefix(base, "/") {
 		return nil, errors.New(`jetadmin: Config.BasePath must start with "/"`)
 	}

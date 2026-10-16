@@ -7,7 +7,9 @@
 //	site, err := jetadmin.New(jetadmin.Config{DB: pool, Auth: a, BasePath: "/admin"})
 //	err = auth.Register(site) // the admin users, in the admin itself
 //
-// The host's command line creates the first user with CreateUser.
+// The host's command line creates the first user with CreateUser. A host
+// with accounts of its own uses Host instead, which serves the same login
+// and logout pages over them.
 package auth
 
 import (

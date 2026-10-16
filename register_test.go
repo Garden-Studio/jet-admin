@@ -67,6 +67,9 @@ func TestRegisterErrors(t *testing.T) {
 		{"composite primary key", func(s *jetadmin.Site) error {
 			return jetadmin.Register(s, jetadmin.Model[twoKeys]{Table: k})
 		}, "composite primary keys are not supported"},
+		{"unknown icon", func(s *jetadmin.Site) error {
+			return jetadmin.Register(s, jetadmin.Model[model.Customers]{Table: c, Icon: "no-such-icon"})
+		}, `Model.Icon "no-such-icon" is no lucide icon`},
 		{"model lacks a column", func(s *jetadmin.Site) error {
 			return jetadmin.Register(s, jetadmin.Model[keyless]{Table: k})
 		}, `no field for column "customer_id"`},
@@ -122,5 +125,40 @@ func TestNewNeedsDBAndAuth(t *testing.T) {
 	defer pool.Close()
 	if _, err := jetadmin.New(jetadmin.Config{DB: pool}); err == nil {
 		t.Error("New without an Authenticator succeeded")
+	}
+}
+
+func TestBasePath(t *testing.T) {
+	// New reads only Go values, so the pool never connects.
+	pool, err := pgxpool.New(t.Context(), "postgres://nobody@127.0.0.1:1/none")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	tests := []struct {
+		name, basePath, want string
+		fails                bool
+	}{
+		{name: "empty is the default", basePath: "", want: "/admin"},
+		{name: "the root", basePath: "/", want: ""},
+		{name: "a trailing slash", basePath: "/data/", want: "/data"},
+		{name: "no leading slash", basePath: "data", fails: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			site, err := jetadmin.New(jetadmin.Config{DB: pool, Auth: auth.New(pool, auth.Options{}), BasePath: tt.basePath})
+			if tt.fails {
+				if err == nil {
+					t.Fatalf("BasePath %q was accepted", tt.basePath)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := site.BasePath(); got != tt.want {
+				t.Errorf("BasePath() = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }

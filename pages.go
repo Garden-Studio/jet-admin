@@ -19,6 +19,9 @@ func (s *Site) chrome(w http.ResponseWriter, r *http.Request, u User, title, act
 		Active:    active,
 		Flash:     s.takeFlash(w, r),
 	}
+	if folded, err := r.Cookie("sidebar_state"); err == nil && folded.Value == "false" {
+		c.NavCollapsed = true
+	}
 	if _, ok := s.auth.(LoginProvider); ok {
 		c.LogoutURL = s.base + "/logout"
 	}
@@ -43,7 +46,7 @@ func (s *Site) nav() []ui.NavGroup {
 			at[name] = i
 			groups = append(groups, ui.NavGroup{Name: name})
 		}
-		m := ui.NavModel{Slug: p.slug, Plural: p.plural, URL: p.listURL()}
+		m := ui.NavModel{Slug: p.slug, Plural: p.plural, URL: p.listURL(), Icon: p.icon}
 		if !p.perms.DisableAdd {
 			m.AddURL = p.addURL()
 		}

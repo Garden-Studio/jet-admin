@@ -156,6 +156,27 @@ user, err := auth.CreateUser(ctx, pool, "ivan", password)
 Then sign in at `/admin/`. Further admin users can be added from the
 "Admin users" page.
 
+### Or sign in with your own accounts
+
+A host that already has users and sessions can keep them: `auth.Host` serves
+the admin's own login and logout pages and hands the credentials to the
+host, which checks them, throttles failures and starts its session as its
+own sign-in does. `admin_users` and `admin_sessions` then stay empty (the
+audit log still references `admin_users`, so keep the schema whole).
+
+```go
+site, err := jetadmin.New(jetadmin.Config{
+	DB:   pool,
+	Auth: auth.Host(siteAccounts{}, auth.HostOptions{UsernameLabel: "Email"}),
+})
+```
+
+`siteAccounts` implements `auth.HostAccounts`: `Authenticate(r)` is the
+admin signed in on the request, `SignIn(w, r, username, password)` sets the
+host's session cookie on `w` or returns an `*auth.Refusal` whose message the
+form shows (anything else is logged and the form says signing in failed),
+and `SignOut(w, r)` ends the session.
+
 ### Try the demo
 
 [`example/`](example) is a runnable site over three related tables (a uuid
@@ -200,8 +221,8 @@ only the ones in `ListFilter`), `__since` takes `today`, `7d`, `30d` or
 | --- | --- |
 | `DB` | what statements run on; a `*pgxpool.Pool` |
 | `Title` | the header and page titles |
-| `BasePath` | where `Handler` is mounted, without the trailing slash |
-| `Auth` | required; `auth.New(…)` or your own `Authenticator` |
+| `BasePath` | where `Handler` is mounted, without the trailing slash; `/admin` when empty, `/` for the root |
+| `Auth` | required; `auth.New(…)`, `auth.Host(…)` over your own accounts, or your own `Authenticator` |
 | `Logger` | for the failures a page cannot show; `slog.Default()` otherwise |
 | `AuditLog` | record adds, changes and deletes in `admin_log` |
 | `Stylesheets` | URLs of stylesheets linked after the admin's own, to theme it (see Styling) |

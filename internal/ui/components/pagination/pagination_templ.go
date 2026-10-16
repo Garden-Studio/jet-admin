@@ -618,7 +618,7 @@ func Ellipsis() templ.Component {
 			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<span aria-hidden=\"true\" data-slot=\"pagination-ellipsis\" class=\"size-7 [&_svg:not([class*='size-'])]:size-3.5 flex items-center justify-center\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<span aria-hidden=\"true\" data-slot=\"pagination-ellipsis\" class=\"size-9 [&_svg:not([class*='size-'])]:size-3.5 flex items-center justify-center\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

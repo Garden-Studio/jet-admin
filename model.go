@@ -24,6 +24,11 @@ type Model[M any] struct {
 	Label, Plural string
 	// Group is the section of the index page the model is listed under.
 	Group string
+	// Icon is an optional lucide icon (https://lucide.dev/icons) beside the
+	// model in the sidebar, by name: "users", "credit-card". There is no
+	// default; when every model has one, the sidebar folds to its icons
+	// instead of hiding.
+	Icon string
 
 	// ListDisplay are the columns of the list; by default the primary key
 	// and the next few columns.
