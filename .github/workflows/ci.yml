@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: jetadmin
+          POSTGRES_PASSWORD: jetadmin
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jetadmin"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://jetadmin:jetadmin@localhost:5432/postgres?sslmode=disable
+      # Fail rather than skip when the database is missing.
+      TEST_DATABASE_REQUIRED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: templ output is up to date
+        run: |
+          go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate
+          git diff --exit-code
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test -race ./...

@@ -1,0 +1,37 @@
+# Hooks for prek (https://github.com/j178/prek), which reads pre-commit's
+# format. Install them once with:
+#
+#   prek install --hook-type pre-commit --hook-type commit-msg
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: local
+    hooks:
+      - id: conventional-commit
+        name: Conventional Commit message
+        entry: scripts/check-commit-msg
+        language: script
+        stages: [commit-msg]
+
+      - id: gofmt
+        name: gofmt
+        entry: sh -c 'out=$(gofmt -l "$@"); if [ -n "$out" ]; then echo "gofmt needed:"; echo "$out"; exit 1; fi' --
+        language: system
+        types: [go]
+        stages: [pre-commit]
+
+      - id: go-vet
+        name: go vet
+        entry: go vet ./...
+        language: system
+        types: [go]
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: templ-generated
+        name: templ files generated
+        entry: sh -c 'go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate >/dev/null && git diff --exit-code -- "*_templ.go"'
+        language: system
+        files: \.templ$
+        pass_filenames: false
+        stages: [pre-commit]

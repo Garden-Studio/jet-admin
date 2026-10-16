@@ -1,0 +1,36 @@
+#!/bin/sh
+# Refuses a commit message whose first line is not a Conventional Commit:
+#   type(scope)!: description
+# with type one of feat fix docs test refactor chore ci perf build style
+# revert; the scope and the ! (a breaking change) are optional. prek runs it
+# as the commit-msg hook with the message file as its argument.
+set -eu
+
+file="${1:?usage: check-commit-msg <message file>}"
+subject=$(grep -v '^#' "$file" | sed -n '/[^[:space:]]/{p;q;}')
+
+# Merges and fixups made by git itself pass.
+case "$subject" in
+	"Merge "* | "Revert \""* | "fixup! "* | "squash! "* | "amend! "*) exit 0 ;;
+esac
+
+pattern='^(feat|fix|docs|test|refactor|chore|ci|perf|build|style|revert)(\([a-z0-9][a-z0-9._/-]*\))?!?: [^ ].*'
+if printf '%s\n' "$subject" | grep -Eq "$pattern"; then
+	exit 0
+fi
+
+cat >&2 <<MSG
+The commit message's first line is not a Conventional Commit:
+
+    $subject
+
+Write it as  type(scope)!: description  for example
+
+    feat(auth): lock sign-ins out after repeated failures
+    fix: keep the search when changing pages
+    docs: explain the filter parameters
+
+Types: feat fix docs test refactor chore ci perf build style revert.
+The scope and the ! (a breaking change) are optional.
+MSG
+exit 1
