@@ -38,6 +38,12 @@ jobs:
         run: |
           go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate
           git diff --exit-code
+      - name: stylesheet and component script are up to date
+        run: |
+          go generate ./internal/ui
+          go run github.com/axadrn/shadcn-templ/v2/cmd/shadcn-templ@v2.0.0-beta.15 bundle --silent
+          git diff --exit-code
+          test -z "$(git status --porcelain internal/ui)" || (git status --porcelain internal/ui && exit 1)
       - name: gofmt
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
       - run: go build ./...

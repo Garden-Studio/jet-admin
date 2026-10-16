@@ -35,3 +35,11 @@ repos:
         files: \.templ$
         pass_filenames: false
         stages: [pre-commit]
+
+      - id: css-generated
+        name: admin.css compiled
+        entry: sh -c 'go generate ./internal/ui && git diff --exit-code -- internal/ui/static/admin.css'
+        language: system
+        files: ^internal/ui/(.*\.templ|.*\.go|css/.*)$
+        pass_filenames: false
+        stages: [pre-commit]
