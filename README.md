@@ -25,7 +25,10 @@ delete rows, with an audit log of who did what.
   the constraint's name.
 - A database-backed sign-in (package `auth`) with bcrypt passwords, hashed
   session tokens and a login backoff, or your own `Authenticator`.
-- One hand-written stylesheet, light and dark, usable on a phone.
+- Built from [shadcn-templ](https://github.com/axadrn/shadcn-templ)
+  components (shadcn/ui for templ), light and dark, usable on a phone. The
+  stylesheet and the components' script are compiled into the module: your
+  app runs no Tailwind and no Node for it.
 
 ## Install
 
@@ -181,7 +184,7 @@ Under `BasePath`:
 | `/{slug}/{pk}/history` | the row's audit log entries |
 | `/log` | every action |
 | `/login`, `/logout` | when the Authenticator is a `LoginProvider` (`auth` is) |
-| `/static/…` | the stylesheet and Datastar |
+| `/static/…` | the stylesheet, Datastar and the components' script |
 
 A list's whole state is in its address, so a filtered list reloads and can be
 shared: `?q=ann&f_plan=pro&f_created_at__since=7d&f_notes__isnull=true&o=-created_at&p=2`.
@@ -201,6 +204,7 @@ only the ones in `ListFilter`), `__since` takes `today`, `7d`, `30d` or
 | `Auth` | required; `auth.New(…)` or your own `Authenticator` |
 | `Logger` | for the failures a page cannot show; `slog.Default()` otherwise |
 | `AuditLog` | record adds, changes and deletes in `admin_log` |
+| `Stylesheets` | URLs of stylesheets linked after the admin's own, to theme it (see Styling) |
 
 `jetadmin.Model[M]`, every field but `Table` optional:
 
@@ -238,6 +242,46 @@ identity) left blank is left out of the INSERT, so the default applies;
 HTTPS), `SessionTTL` (14 days), `ClientIP` (the address failed sign-ins are
 counted against; return the client's behind a proxy) and `Logger`.
 
+## Styling
+
+The pages are [shadcn-templ](https://github.com/axadrn/shadcn-templ)
+components in its compact "mira" style over the neutral palette, compiled
+with Tailwind v4 into one embedded stylesheet. Dark mode follows the
+system's preference; put `class="dark"` or `class="light"` on the admin's
+`<html>` (from a proxy or a script of yours) to force one.
+
+To theme the admin, override shadcn's CSS variables in a stylesheet of
+yours and list it in `Config.Stylesheets`; every page links it after
+`admin.css`. The variables are plain custom properties on `:root`, and the
+dark ones apply under `.dark` and under `@media (prefers-color-scheme:
+dark)` on `:root:not(.light)`:
+
+```css
+:root {
+  --primary: oklch(0.55 0.2 260);          /* buttons, checked boxes */
+  --primary-foreground: oklch(0.98 0 0);
+  --radius: 0.375rem;                      /* every corner derives from it */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) { --primary: oklch(0.7 0.15 260); }
+}
+```
+
+The variables are shadcn's: `--background`, `--foreground`, `--card`,
+`--popover`, `--primary`, `--secondary`, `--muted`, `--accent`,
+`--destructive`, `--border`, `--input`, `--ring`, `--radius` and the
+`--sidebar-*` set, each colour with its `-foreground`. A theme from
+[ui.shadcn.com/themes](https://ui.shadcn.com/themes) pastes in as it is.
+
+The components' script (about 39 KB, 13 KB gzipped) opens and closes the
+delete dialog and the sidebar on narrow screens, and keeps focus in the
+dialog. Its `<script>` tag, like Datastar's, carries the nonce of a
+Content-Security-Policy when the request context has one
+(`templ.WithNonce`). Datastar evaluates its expressions, so a policy needs
+`'unsafe-eval'` in `script-src` for the live parts; without them the pages
+still work, as plain links and forms.
+
 ## Security
 
 - `Handler` wraps everything in `http.CrossOriginProtection`: a form posted
@@ -261,5 +305,5 @@ counted against; return the client's behind a proxy) and `Logger`.
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Datastar is embedded under its MIT license, see
-[NOTICE](NOTICE).
+MIT, see [LICENSE](LICENSE). Datastar, the shadcn-templ components and
+what they carry are embedded under their licenses, see [NOTICE](NOTICE).

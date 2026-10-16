@@ -12,7 +12,9 @@ with the public API.
 schema.sql            the admin's own tables (jetadmin.Schema)
 auth/                 the database-backed Authenticator, the CLI helpers, auth.Register
 internal/core         what jetadmin and auth share (User, Authenticator, the page chrome)
-internal/ui           templ components, view structs, admin.css and datastar.js (embedded)
+internal/ui           the pages (templ), view structs, static/ (embedded and served)
+internal/ui/components  shadcn-templ components, vendored by its CLI and adapted
+internal/ui/css       the stylesheet's source; static/admin.css is compiled from it
 internal/db/jet       Jet's generated code for schema.sql: never edit by hand
 internal/testdb       a fresh database per test
 example/              the runnable demo; example/db/jet is generated, with db tags
@@ -32,13 +34,41 @@ scripts/check-commit-msg  the commit-msg hook
 - After editing a `.templ` file, regenerate and commit the `*_templ.go`:
   `go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate`. CI fails when
   they differ.
+- The UI is [shadcn-templ](https://github.com/axadrn/shadcn-templ)
+  components (style mira, `components.json`), copied in with its CLI:
+  `go run github.com/axadrn/shadcn-templ/v2/cmd/shadcn-templ@v2.0.0-beta.15
+  add <name>`, then `gofmt -w internal/ui/components`, templ generate and
+  `go mod tidy`. They are ours once copied: an adaptation carries a
+  `jet-admin:` comment saying why (links stay links, a native checkbox, the
+  bundle under BasePath, …), and `add --overwrite` would undo it. Remove
+  the scripts and components nothing uses: the bundle takes every
+  `internal/ui/components/*/*.js`, and `add` brings back checkbox.js, tooltip.js,
+  floatingui/ and the baseui hooks only they use.
+- After editing a `.templ` file, a class or `internal/ui/css/`, compile the
+  stylesheet: `go generate ./internal/ui` (Tailwind v4 through `go tool
+  gowind`, pinned in go.mod; no Node) and commit `internal/ui/static/admin.css`.
+  Hosts never run Tailwind over these templates, so a class that is not in
+  the committed CSS does not exist. Classes are scanned from `.templ` and
+  `.go` files under `internal/ui`.
+- After changing a component's `.js`, rebuild the script bundle:
+  `go run github.com/axadrn/shadcn-templ/v2/cmd/shadcn-templ@v2.0.0-beta.15
+  bundle`, and commit the new `internal/ui/static/shadcn-templ-<hash>.js`
+  with `internal/ui/components/scripts_bundle.go`. CI regenerates the CSS
+  and the bundle and fails on any difference.
+- Datastar and the component script never drive the same element. The
+  script owns local interaction (opening, closing, focus, keys); Datastar
+  owns round trips. Datastar patches only #flash, #changelist,
+  #changelist-params, #change-form, #login-error and #dialog; keep stateful
+  components out of them, or patch them whole (the delete dialog is patched
+  in replace mode: a morph keeps its portal placeholder alive).
 - After changing `schema.sql` or `example/db/schema.sql`, regenerate the Jet
   code: `go run ./scripts/jetgen -schema schema.sql -dest internal/db/jet`
   and `go run ./scripts/jetgen -schema example/db/schema.sql -dest
   example/db/jet -db-tags`. Changing `schema.sql` changes what every host
   migrates: say so in the commit (a `!` if it breaks them).
 - For a visible change, run the example and look at the pages (light, dark,
-  narrow), with and without JavaScript.
+  narrow), with and without JavaScript. Without it the sidebar's trigger
+  hides (`noscript:` variant) and a delete link opens the confirmation page.
 - Every PostgreSQL statement is built with Jet's DSL (imported as `pg` in
   this package, which declares names Jet also exports) and run through pgx.
   No SQL strings in Go except DDL: the schema and the test databases'
