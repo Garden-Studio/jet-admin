@@ -57,7 +57,7 @@ type ContentProps struct {
 func mediaClasses(variant MediaVariant) string {
 	base := "mb-2 flex shrink-0 items-center justify-center [&_svg]:pointer-events-none [&_svg]:shrink-0"
 	if variant == MediaVariantIcon {
-		return utils.CN(base, "bg-muted text-foreground flex size-8 shrink-0 items-center justify-center rounded-md [&_svg:not([class*='size-'])]:size-4")
+		return utils.CN(base, "bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg [&_svg:not([class*='size-'])]:size-6")
 	}
 	return utils.CN(base, "bg-transparent")
 }
@@ -88,7 +88,7 @@ func Empty(props ...Props) templ.Component {
 			p = props[0]
 		}
 		var templ_7745c5c3_Var2 = []any{utils.CN(
-			"gap-4 rounded-xl border-dashed p-6 flex w-full min-w-0 flex-1 flex-col items-center justify-center text-center text-balance",
+			"gap-4 rounded-lg border-dashed p-12 flex w-full min-w-0 flex-1 flex-col items-center justify-center text-center text-balance",
 			p.Class,
 		),
 		}
@@ -181,7 +181,7 @@ func Header(props ...HeaderProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var6 = []any{utils.CN("gap-1 flex max-w-sm flex-col items-center", p.Class)}
+		var templ_7745c5c3_Var6 = []any{utils.CN("gap-2 flex max-w-sm flex-col items-center", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -377,7 +377,7 @@ func Title(props ...TitleProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var15 = []any{utils.CN("text-sm font-medium tracking-tight font-heading", p.Class)}
+		var templ_7745c5c3_Var15 = []any{utils.CN("text-lg font-medium tracking-tight font-heading", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var15...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -468,7 +468,7 @@ func Description(props ...DescriptionProps) templ.Component {
 			p = props[0]
 		}
 		var templ_7745c5c3_Var19 = []any{utils.CN(
-			"text-xs/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+			"text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
 			p.Class,
 		),
 		}
@@ -562,7 +562,7 @@ func Content(props ...ContentProps) templ.Component {
 			p = props[0]
 		}
 		var templ_7745c5c3_Var23 = []any{utils.CN(
-			"gap-2 text-xs/relaxed flex w-full max-w-sm min-w-0 flex-col items-center text-balance",
+			"gap-4 text-sm flex w-full max-w-sm min-w-0 flex-col items-center text-balance",
 			p.Class,
 		),
 		}

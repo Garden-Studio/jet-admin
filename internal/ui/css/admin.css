@@ -3,7 +3,7 @@
    served: host apps never run Tailwind over these templates.
 
    The tokens and the theme block are shadcn-templ's (`shadcn-templ init
-   --preset mira`). Dark follows the system unless the page's <html> has
+   --preset vega`). Dark follows the system unless the page's <html> has
    class "light" or "dark". Hosts theme the admin by overriding the custom
    properties below (see README, Styling). */
 
@@ -35,9 +35,10 @@
    needs it, hides. */
 @custom-variant noscript (@media (scripting: none));
 
-/* mira sets most of the admin in text-xs (12px), too small to read a table
-   at length: the scale moves up a step, to shadcn's usual sizes. Content
-   (text-xs) is 14px, headings 16px, dialog titles 18px, page titles 22px. */
+/* The scale is one step above Tailwind's: the pages set tables and
+   secondary text in text-xs, which at 12px is too small to read a table at
+   length. Content (text-xs) is 14px, the controls and headings (text-sm)
+   16px, dialog titles 18px, page titles 22px. */
 @theme {
   --text-xs: 0.875rem;
   --text-xs--line-height: 1.25rem;

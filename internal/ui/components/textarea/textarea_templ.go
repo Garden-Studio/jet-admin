@@ -57,8 +57,7 @@ func Textarea(props ...Props) templ.Component {
 		var templ_7745c5c3_Var2 = []any{utils.CN(
 			// 1:1 base/ui/textarea.tsx: structure lives here, the look comes
 			// from the active style-*.css via.
-			// jet-admin: 16px text at every width, not mira's 14px from md up.
-			"border-input bg-input/20 dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 resize-none rounded-md border px-2.5 py-2 text-sm transition-colors focus-visible:ring-2 aria-invalid:ring-2 flex field-sizing-content min-h-16 w-full outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+			"border-input dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-md border bg-transparent px-2.5 py-2 text-base shadow-xs transition-[color,box-shadow] focus-visible:ring-3 aria-invalid:ring-3 md:text-sm flex field-sizing-content min-h-16 w-full outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
 			p.Class,
 		),
 		}
@@ -205,7 +204,7 @@ func Textarea(props ...Props) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(p.Value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/components/textarea/textarea.templ`, Line: 58, Col: 11}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/components/textarea/textarea.templ`, Line: 57, Col: 11}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {

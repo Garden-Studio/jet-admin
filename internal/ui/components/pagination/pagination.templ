@@ -80,7 +80,7 @@ templ Content(props ...ContentProps) {
 			id={ p.ID }
 		}
 		data-slot="pagination-content"
-		class={ utils.CN("gap-0.5 flex items-center", p.Class) }
+		class={ utils.CN("gap-1 flex items-center", p.Class) }
 		{ p.Attributes... }
 	>
 		{ children... }
@@ -201,7 +201,7 @@ templ Next(props ...NextProps) {
 }
 
 templ Ellipsis() {
-	<span aria-hidden="true" data-slot="pagination-ellipsis" class="size-9 [&_svg:not([class*='size-'])]:size-3.5 flex items-center justify-center">
+	<span aria-hidden="true" data-slot="pagination-ellipsis" class="size-9 [&_svg:not([class*='size-'])]:size-4 flex items-center justify-center">
 		@icon.Ellipsis()
 		<span class="sr-only">More pages</span>
 	</span>

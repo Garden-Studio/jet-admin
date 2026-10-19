@@ -35,7 +35,7 @@ scripts/check-commit-msg  the commit-msg hook
   `go run github.com/a-h/templ/cmd/templ@v0.3.1070 generate`. CI fails when
   they differ.
 - The UI is [shadcn-templ](https://github.com/axadrn/shadcn-templ)
-  components (style mira, `components.json`), copied in with its CLI:
+  components (style vega, `components.json`), copied in with its CLI:
   `go run github.com/axadrn/shadcn-templ/v2/cmd/shadcn-templ@v2.0.0-beta.15
   add <name>`, then `gofmt -w internal/ui/components`, templ generate and
   `go mod tidy`. They are ours once copied: an adaptation carries a

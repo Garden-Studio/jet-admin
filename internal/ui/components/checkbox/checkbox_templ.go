@@ -16,7 +16,7 @@ import (
 // jet-admin: shadcn-templ's Checkbox is Base UI's, a span with
 // role="checkbox" that checkbox.js keeps in step with a hidden input. Every
 // jet-admin page works without JavaScript, so this one is a native
-// <input type="checkbox"> wearing the same look (the mira classes, with
+// <input type="checkbox"> wearing the same look (the vega classes, with
 // checked: in place of data-checked:), and the tick is an icon over it
 // shown by peer-checked. Forms post it and Datastar can set .checked on it.
 
@@ -173,7 +173,7 @@ func Checkbox(props ...Props) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " class=\"peer col-start-1 row-start-1 m-0 size-4 cursor-pointer appearance-none rounded-[4px] border border-input bg-transparent transition-shadow outline-none dark:bg-input/30 checked:border-primary checked:bg-primary dark:checked:bg-primary focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 disabled:cursor-not-allowed disabled:opacity-50\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, " class=\"peer col-start-1 row-start-1 m-0 size-4 cursor-pointer appearance-none rounded-[4px] border border-input bg-transparent shadow-xs transition-shadow outline-none dark:bg-input/30 checked:border-primary checked:bg-primary dark:checked:bg-primary focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 disabled:cursor-not-allowed disabled:opacity-50\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

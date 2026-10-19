@@ -174,7 +174,7 @@ func Content(props ...ContentProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var6 = []any{utils.CN("gap-0.5 flex items-center", p.Class)}
+		var templ_7745c5c3_Var6 = []any{utils.CN("gap-1 flex items-center", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -618,7 +618,7 @@ func Ellipsis() templ.Component {
 			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<span aria-hidden=\"true\" data-slot=\"pagination-ellipsis\" class=\"size-9 [&_svg:not([class*='size-'])]:size-3.5 flex items-center justify-center\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 27, "<span aria-hidden=\"true\" data-slot=\"pagination-ellipsis\" class=\"size-9 [&_svg:not([class*='size-'])]:size-4 flex items-center justify-center\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

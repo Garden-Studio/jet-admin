@@ -133,7 +133,7 @@ func Set(props ...SetProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var2 = []any{utils.CN("gap-4 has-[>[data-slot=checkbox-group]]:gap-3 has-[>[data-slot=radio-group]]:gap-3 flex flex-col", p.Class)}
+		var templ_7745c5c3_Var2 = []any{utils.CN("gap-6 has-[>[data-slot=checkbox-group]]:gap-3 has-[>[data-slot=radio-group]]:gap-3 flex flex-col", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -226,7 +226,7 @@ func Legend(props ...LegendProps) templ.Component {
 		if p.Variant == "" {
 			p.Variant = LegendVariantLegend
 		}
-		var templ_7745c5c3_Var6 = []any{utils.CN("mb-2 font-medium data-[variant=label]:text-xs/relaxed data-[variant=legend]:text-sm", p.Class)}
+		var templ_7745c5c3_Var6 = []any{utils.CN("mb-3 font-medium data-[variant=label]:text-sm data-[variant=legend]:text-base", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -342,7 +342,7 @@ func Group(props ...GroupProps) templ.Component {
 			}
 			attrs[k] = v
 		}
-		var templ_7745c5c3_Var11 = []any{utils.CN("gap-4 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4 group/field-group @container/field-group flex w-full flex-col", p.Class)}
+		var templ_7745c5c3_Var11 = []any{utils.CN("gap-7 data-[slot=checkbox-group]:gap-3 *:data-[slot=field-group]:gap-4 group/field-group @container/field-group flex w-full flex-col", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var11...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -448,7 +448,7 @@ func Field(props ...Props) templ.Component {
 		if p.Orientation == "" {
 			p.Orientation = OrientationVertical
 		}
-		var templ_7745c5c3_Var16 = []any{utils.CN("data-[invalid=true]:text-destructive gap-2 group/field flex w-full", fieldClasses(p.Orientation), p.Class)}
+		var templ_7745c5c3_Var16 = []any{utils.CN("data-[invalid=true]:text-destructive gap-3 group/field flex w-full", fieldClasses(p.Orientation), p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var16...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -551,7 +551,7 @@ func Content(props ...ContentProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var21 = []any{utils.CN("gap-0.5 group/field-content flex flex-1 flex-col leading-snug", p.Class)}
+		var templ_7745c5c3_Var21 = []any{utils.CN("gap-1 group/field-content flex flex-1 flex-col leading-snug", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var21...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -644,8 +644,8 @@ func Label(props ...LabelProps) templ.Component {
 		var templ_7745c5c3_Var25 = []any{utils.CN(
 			// 1:1 base/ui/field.tsx FieldLabel: it composes Label, so the
 			// base string comes first, then the field-label strings.
-			"gap-2 text-xs/relaxed leading-none font-medium group-data-[disabled=true]:opacity-50 peer-disabled:opacity-50 flex items-center select-none group-data-[disabled=true]:pointer-events-none peer-disabled:cursor-not-allowed",
-			"has-data-checked:bg-primary/5 dark:has-data-checked:bg-primary/10 gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:hover:bg-input/40 has-[>[data-slot=field]]:has-[:focus-visible]:border-ring has-[>[data-slot=field]]:has-[:focus-visible]:ring-ring/30 has-[>[data-slot=field]]:has-[:focus-visible]:ring-2 *:data-[slot=field]:p-2 group/field-label peer/field-label flex w-fit",
+			"gap-2 text-sm leading-none font-medium group-data-[disabled=true]:opacity-50 peer-disabled:opacity-50 flex items-center select-none group-data-[disabled=true]:pointer-events-none peer-disabled:cursor-not-allowed",
+			"has-data-checked:bg-primary/5 has-data-checked:border-primary/30 dark:has-data-checked:border-primary/20 dark:has-data-checked:bg-primary/10 gap-2 leading-snug group-data-[disabled=true]/field:opacity-50 has-[>[data-slot=field]]:rounded-md has-[>[data-slot=field]]:border has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:hover:bg-muted/50 has-[>[data-slot=field]]:has-[:focus-visible]:border-ring has-[>[data-slot=field]]:has-[:focus-visible]:ring-ring/50 has-[>[data-slot=field]]:has-[:focus-visible]:ring-3 *:data-[slot=field]:p-3 group/field-label peer/field-label flex w-fit",
 			"has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col",
 			p.Class,
 		),
@@ -758,7 +758,7 @@ func Title(props ...TitleProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var30 = []any{utils.CN("gap-2 text-xs/relaxed font-medium group-data-[disabled=true]/field:opacity-50 flex w-fit items-center", p.Class)}
+		var templ_7745c5c3_Var30 = []any{utils.CN("gap-2 text-sm font-medium group-data-[disabled=true]/field:opacity-50 flex w-fit items-center", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var30...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -848,7 +848,7 @@ func Description(props ...DescriptionProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var34 = []any{utils.CN("text-muted-foreground text-left text-xs/relaxed [[data-variant=legend]+&]:-mt-1.5 leading-normal font-normal group-has-data-horizontal/field:text-balance last:mt-0 nth-last-2:-mt-1 [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary", p.Class)}
+		var templ_7745c5c3_Var34 = []any{utils.CN("text-muted-foreground text-left text-sm [[data-variant=legend]+&]:-mt-1.5 leading-normal font-normal group-has-data-horizontal/field:text-balance last:mt-0 nth-last-2:-mt-1 [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var34...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -939,7 +939,7 @@ func Separator(props ...SeparatorProps) templ.Component {
 			p = props[0]
 		}
 		content := childrenHTML(ctx)
-		var templ_7745c5c3_Var38 = []any{utils.CN("-my-2 h-5 text-xs/relaxed group-data-[variant=outline]/field-group:-mb-2 relative", p.Class)}
+		var templ_7745c5c3_Var38 = []any{utils.CN("-my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2 relative", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var38...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -1052,7 +1052,7 @@ func Error(props ...ErrorProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var43 = []any{utils.CN("text-destructive text-xs/relaxed font-normal", p.Class)}
+		var templ_7745c5c3_Var43 = []any{utils.CN("text-destructive text-sm font-normal", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var43...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

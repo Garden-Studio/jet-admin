@@ -61,7 +61,7 @@ templ Table(props ...Props) {
 				id={ p.ID }
 			}
 			data-slot="table"
-			class={ utils.CN("w-full caption-bottom text-xs", p.Class) }
+			class={ utils.CN("w-full caption-bottom text-sm", p.Class) }
 			{ p.Attributes... }
 		>
 			{ children... }
@@ -185,7 +185,7 @@ templ Caption(props ...CaptionProps) {
 			id={ p.ID }
 		}
 		data-slot="table-caption"
-		class={ utils.CN("text-muted-foreground mt-4 text-xs", p.Class) }
+		class={ utils.CN("text-muted-foreground mt-4 text-sm", p.Class) }
 		{ p.Attributes... }
 	>
 		{ children... }

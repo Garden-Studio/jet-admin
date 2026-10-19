@@ -164,7 +164,7 @@ func List(props ...ListProps) templ.Component {
 			p = props[0]
 		}
 		var templ_7745c5c3_Var6 = []any{utils.CN(
-			"text-muted-foreground gap-1.5 text-xs/relaxed flex flex-wrap items-center wrap-break-word",
+			"text-muted-foreground gap-1.5 text-sm sm:gap-2.5 flex flex-wrap items-center wrap-break-word",
 			p.Class,
 		),
 		}
@@ -258,7 +258,7 @@ func Item(props ...ItemProps) templ.Component {
 			p = props[0]
 		}
 		var templ_7745c5c3_Var10 = []any{utils.CN(
-			"gap-1 inline-flex items-center",
+			"gap-1.5 inline-flex items-center",
 			p.Class,
 		),
 		}
@@ -657,7 +657,7 @@ func Ellipsis() templ.Component {
 			templ_7745c5c3_Var26 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span aria-hidden=\"true\" data-slot=\"breadcrumb-ellipsis\" role=\"presentation\" class=\"size-4 [&>svg]:size-3.5 flex items-center justify-center\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "<span aria-hidden=\"true\" data-slot=\"breadcrumb-ellipsis\" role=\"presentation\" class=\"size-5 [&>svg]:size-4 flex items-center justify-center\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

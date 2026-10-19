@@ -87,7 +87,7 @@ func Table(props ...Props) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var2 = []any{utils.CN("w-full caption-bottom text-xs", p.Class)}
+		var templ_7745c5c3_Var2 = []any{utils.CN("w-full caption-bottom text-sm", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -717,7 +717,7 @@ func Caption(props ...CaptionProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var30 = []any{utils.CN("text-muted-foreground mt-4 text-xs", p.Class)}
+		var templ_7745c5c3_Var30 = []any{utils.CN("text-muted-foreground mt-4 text-sm", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var30...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

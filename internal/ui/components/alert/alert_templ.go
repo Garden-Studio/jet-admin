@@ -68,7 +68,7 @@ func Alert(props ...Props) templ.Component {
 			p = props[0]
 		}
 		var templ_7745c5c3_Var2 = []any{utils.CN(
-			"grid gap-0.5 rounded-lg border px-2 py-1.5 text-left text-xs/relaxed has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-1.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-3.5 group/alert relative w-full",
+			"grid gap-0.5 rounded-lg border px-4 py-3 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4 group/alert relative w-full",
 			variantClasses(p.Variant),
 			p.Class,
 		),
@@ -267,7 +267,7 @@ func Description(props ...DescriptionProps) templ.Component {
 			p = props[0]
 		}
 		var templ_7745c5c3_Var10 = []any{utils.CN(
-			"text-muted-foreground text-xs/relaxed text-balance md:text-pretty [&_p:not(:last-child)]:mb-4 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
+			"text-muted-foreground text-sm text-balance md:text-pretty [&_p:not(:last-child)]:mb-4 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
 			p.Class,
 		),
 		}
@@ -361,7 +361,7 @@ func Action(props ...ActionProps) templ.Component {
 		if len(props) > 0 {
 			p = props[0]
 		}
-		var templ_7745c5c3_Var14 = []any{utils.CN("absolute top-1.5 right-2", p.Class)}
+		var templ_7745c5c3_Var14 = []any{utils.CN("absolute top-2.5 right-3", p.Class)}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var14...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

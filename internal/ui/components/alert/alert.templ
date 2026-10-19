@@ -51,7 +51,7 @@ templ Alert(props ...Props) {
 		}
 		class={
 			utils.CN(
-				"grid gap-0.5 rounded-lg border px-2 py-1.5 text-left text-xs/relaxed has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-1.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-3.5 group/alert relative w-full",
+				"grid gap-0.5 rounded-lg border px-4 py-3 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4 group/alert relative w-full",
 				variantClasses(p.Variant),
 				p.Class,
 			),
@@ -96,7 +96,7 @@ templ Description(props ...DescriptionProps) {
 		data-slot="alert-description"
 		class={
 			utils.CN(
-				"text-muted-foreground text-xs/relaxed text-balance md:text-pretty [&_p:not(:last-child)]:mb-4 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
+				"text-muted-foreground text-sm text-balance md:text-pretty [&_p:not(:last-child)]:mb-4 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
 				p.Class,
 			),
 		}
@@ -117,7 +117,7 @@ templ Action(props ...ActionProps) {
 			id={ p.ID }
 		}
 		data-slot="alert-action"
-		class={ utils.CN("absolute top-1.5 right-2", p.Class) }
+		class={ utils.CN("absolute top-2.5 right-3", p.Class) }
 		{ p.Attributes... }
 	>
 		{ children... }

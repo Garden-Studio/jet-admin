@@ -266,10 +266,10 @@ counted against; return the client's behind a proxy) and `Logger`.
 ## Styling
 
 The pages are [shadcn-templ](https://github.com/axadrn/shadcn-templ)
-components in its compact "mira" style over the neutral palette, compiled
-with Tailwind v4 into one embedded stylesheet. Dark mode follows the
-system's preference; put `class="dark"` or `class="light"` on the admin's
-`<html>` (from a proxy or a script of yours) to force one.
+components in its "vega" style, shadcn/ui's classic look, over the neutral
+palette, compiled with Tailwind v4 into one embedded stylesheet. Dark mode
+follows the system's preference; put `class="dark"` or `class="light"` on
+the admin's `<html>` (from a proxy or a script of yours) to force one.
 
 To theme the admin, override shadcn's CSS variables in a stylesheet of
 yours and list it in `Config.Stylesheets`; every page links it after

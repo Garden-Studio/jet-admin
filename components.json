@@ -4,7 +4,7 @@
     "path": "/static"
   },
   "$schema": "https://shadcn-templ.com/schema/components.json",
-  "style": "base-mira",
+  "style": "base-vega",
   "tailwind": {
     "css": "internal/ui/css/admin.css",
     "baseColor": "neutral",
