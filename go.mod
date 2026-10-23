@@ -2,6 +2,8 @@ module github.com/garden-studio/jet-admin
 
 go 1.26.3
 
+toolchain go1.26.10
+
 require (
 	github.com/Oudwins/tailwind-merge-go v0.2.3
 	github.com/a-h/templ v0.3.1070
